@@ -1,0 +1,8 @@
+*.pyc
+*.pyx
+bin
+include
+lib
+lib64
+pyvenv.cfg
+notes.md
