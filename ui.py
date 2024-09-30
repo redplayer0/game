@@ -6,8 +6,8 @@ class VisualAction:
         self.text = text
         self.callback = callback
         self.x = 10
-        self.w = 160
-        self.h = 30
+        self.w = 220
+        self.h = 20
         self.hovered = False
 
     def on_click(self):
@@ -20,9 +20,9 @@ class VisualAction:
 
     def draw(self, y):
         x, w, h = self.x, self.w, self.h
-        pyxel.rect(x, y, w, h, 3)
-        pyxel.rectb(x, y, w, h, 6 if not self.hovered else 8)
-        pyxel.text(x + 4, y + 4, self.text, 6)
+        pyxel.rect(x, y, w, h, 6 if not self.hovered else 15)
+        pyxel.rectb(x, y, w, h, 1)
+        pyxel.text(x + 4, y + 4, self.text, 1)
 
 
 class VisualCard:
@@ -45,9 +45,9 @@ class VisualCard:
 
     def draw(self, y):
         x, w, h = self.x, self.w, self.h
-        pyxel.rect(x, y, w, h, 14 if self.card.selected else 3)
-        pyxel.rectb(x, y, w, h, 6 if not self.hovered else 8)
-        pyxel.text(x + 4, y + 4, self.card.text, 6)
+        pyxel.rect(x, y, w, h, 6 if not self.hovered else 15)
+        pyxel.rectb(x, y, w, h, 1)
+        pyxel.text(x + 4, y + 4, self.card.text, 1)
 
 
 class VisualItem:
@@ -70,9 +70,9 @@ class VisualItem:
 
     def draw(self, y):
         x, w, h = self.x, self.w, self.h
-        pyxel.rect(x, y, w, h, 3)
-        pyxel.rectb(x, y, w, h, 6 if not self.hovered else 8)
-        pyxel.text(x + 4, y + 4, self.item.text, 6)
+        pyxel.rect(x, y, w, h, 6 if not self.hovered else 15)
+        pyxel.rectb(x, y, w, h, 1)
+        pyxel.text(x + 4, y + 4, self.item.text, 1)
 
 
 class Button:
@@ -97,9 +97,9 @@ class Button:
 
     def draw(self):
         x, y, w, h = self.x, self.y, self.w, self.h
-        pyxel.rect(x, y, w, h, 3)
-        pyxel.rectb(x, y, w, h, 6 if not self.hovered else 8)
-        pyxel.text(x + 4, y + 4, self.label, 6)
+        pyxel.rect(x, y, w, h, 6 if not self.hovered else 15)
+        pyxel.rectb(x, y, w, h, 1)
+        pyxel.text(x + 4, y + 4, self.label, 1)
 
 
 class Picker:

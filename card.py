@@ -47,8 +47,9 @@ class Move:
             self.tiles.append(hovered_tile)
 
     def execute(self):
-        self.user.position = self.tiles[-1]
-        return True
+        if self.tiles:
+            self.user.position = self.tiles[-1]
+            return True
 
     def reset(self):
         self.tiles.clear()

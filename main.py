@@ -2,7 +2,7 @@ import pyxel
 
 from card import Card, Move
 from entity import Entity
-from globals import action_stack, board, entities, messages, pickers
+from globals import action_stack, board, entities, log, messages, pickers
 from item import Item
 from ui import Button, Picker, VisualAction, VisualCard, VisualItem
 
@@ -30,6 +30,14 @@ def message(msg, time=5):
     messages.append([msg, time * 90])
 
 
+def mlog(msg):
+    if log:
+        if msg == log[-1][0]:
+            log[-1][1] += 1
+            return
+    log.append([msg, 0])
+
+
 class New:
     def __init__(self):
         self.turn = 0
@@ -37,7 +45,7 @@ class New:
         self.hovered_tile: tuple[int, int] = None
         pyxel.init(320, 240, fps=90)
         pyxel.mouse(True)
-        pyxel.colors.from_list(rose_pine)
+        # pyxel.colors.from_list(rose_pine)
         action_stack.append(self.setup_entities)
         ui = Picker()
         ui.add_button(
@@ -115,7 +123,7 @@ class New:
                 e.half_selected = None
                 e.initiative = 0
             self.active_entity = None
-            message(f"Turn {self.turn} is over!")
+            mlog(f"Turn {self.turn} is over!")
             self.turn += 1
             return True
 
@@ -143,10 +151,15 @@ class New:
             )
             self.active_entity = entities[0]
             self.active_entity.is_active = True
-            message(f"{self.active_entity.name}'s turn!")
+            mlog(f"{self.active_entity.etype}'s turn!")
             return True
         else:
-            message("Choose cards for every character")
+            mlog("Choose cards for every character")
+
+    def reset_action(self):
+        if hasattr(self.active_entity.actions[-1], "reset"):
+            self.active_entity.actions[-1].reset()
+            return True
 
     def execute_action(self):
         if hasattr(self.active_entity.actions[-1], "execute"):
@@ -179,6 +192,12 @@ class New:
                         "Execute action",
                         callback=self.execute_action,
                         once=True,
+                    ),
+                )
+                ui.add_button(
+                    Button(
+                        "Reset action",
+                        callback=self.reset_action,
                     ),
                 )
                 ui.add_button(
@@ -245,19 +264,19 @@ class New:
                 )
             pickers.append(ui)
         else:
-            message("How did you get here without active entity")
+            mlog("How did you get here without active entity")
 
     def open_card_selection(self):
         def close_card_selection():
             active = self.active_entity
             selections = sum(c.selected for c in active.cards)
             if selections != 3:
-                message("Choose correct number of cards")
+                mlog("Choose correct number of cards")
             else:
                 active.initiative = [
                     card.initiative for card in active.cards if card.selected == 1
                 ][0]
-                message(f"{active.name} initiative set to {active.initiative}")
+                mlog(f"{active.etype} initiative set to {active.initiative}")
             self.active_entity.is_active = False
             self.active_entity = None
             pickers.pop()
@@ -305,29 +324,52 @@ class New:
                     action_stack.pop()
 
     def draw(self):
-        pyxel.cls(1)
+        pyxel.cls(7)
         for tile, objects in board.items():
-            self.draw_tile(tile, 6)
+            self.draw_tile(tile, 0)
+        if active := self.active_entity:
+            if active.actions:
+                if hasattr(active.actions[-1], "tiles"):
+                    for tile in active.actions[-1].tiles:
+                        self.fill_tile(tile, 6)
         for e in entities:
             e.draw()
-        self.draw_tile(self.hovered_tile, 8)
+        self.draw_inner_tile(self.hovered_tile, 10)
         if ent := self.active_entity:
             if ent.in_hand:
                 x, y = pyxel.mouse_x, pyxel.mouse_y
                 ent.draw_at(x + 8, y + 8)
         if not pyxel.btn(pyxel.MOUSE_BUTTON_MIDDLE):
             pickers[-1].draw()
-        stack = " ".join([a.__name__ for a in action_stack])
-        pyxel.text(4, 4, stack, 6)
+        # stack = " ".join([a.__name__ for a in action_stack])
+        # pyxel.text(4, 4, stack, 1)
         # pyxel.text(4, 12, str(len(pickers)), 6)
-        for y, msg in enumerate(reversed(messages)):
-            pyxel.rect(3, 230 - y * 8 - 1, len(msg[0]) * 4 + 1, 7, 0)
-            pyxel.text(4, 230 - y * 8, msg[0], 6)
+        # for y, msg in enumerate(reversed(messages)):
+        #     pyxel.rect(3, 230 - y * 8 - 1, len(msg[0]) * 4 + 1, 7, 6)
+        #     pyxel.text(4, 230 - y * 8, msg[0], 1)
+        n = 5 if len(log) > 5 else len(log)
+        for y, msg in enumerate(reversed(log[-n::])):
+            if msg[1]:
+                text = f"{msg[0]} x{msg[1]+1}"
+            else:
+                text = msg[0]
+            pyxel.rect(3, 230 - y * 8 - 1, len(text) * 4 + 1, 7, 6)
+            pyxel.text(4, 230 - y * 8, text, 1)
 
     def draw_tile(self, tile, color):
         if tile:
             x, y = tile
             pyxel.rectb(x * 32, y * 32, 31, 31, color)
+
+    def draw_inner_tile(self, tile, color):
+        if tile:
+            x, y = tile
+            pyxel.rectb(x * 32 + 1, y * 32 + 1, 29, 29, color)
+
+    def fill_tile(self, tile, color):
+        if tile:
+            x, y = tile
+            pyxel.rect(x * 32 + 1, y * 32 + 1, 29, 29, color)
 
 
 if __name__ == "__main__":
