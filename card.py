@@ -4,10 +4,7 @@ from dataclasses import dataclass, field
 
 import pyxel
 
-from globals import entities
-
-
-class Action: ...
+from actions import Action
 
 
 @dataclass(kw_only=True)
@@ -70,26 +67,3 @@ class Card:
     @property
     def title(self):
         return f"{self.initiative} {self.name} lv: {self.level}"
-
-
-class Move:
-    def __init__(self, range: int):
-        self.range = range
-        self.user = None
-        self.card = None
-        self.instant = False
-        self.tiles = []
-
-    def update(self, hovered_tile):
-        if not hovered_tile:
-            return
-        if hovered_tile not in [e.position for e in entities]:
-            self.tiles.append(hovered_tile)
-
-    def execute(self):
-        if self.tiles:
-            self.user.position = self.tiles[-1]
-            return True
-
-    def reset(self):
-        self.tiles.clear()

@@ -2,6 +2,20 @@ from __future__ import annotations
 
 import pyxel
 
+from globals import log, messages
+
+
+def message(msg, time=5):
+    messages.append([msg, time * 90])
+
+
+def mlog(msg):
+    if log:
+        if msg == log[-1][0]:
+            log[-1][1] += 1
+            return
+    log.append([msg, 0])
+
 
 def draw_tile(tile, color):
     if tile:

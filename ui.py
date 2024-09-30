@@ -71,12 +71,13 @@ class Picker:
             self.objects.append(self.objects.pop(0))
 
     def on_click(self):
-        if self.hovered:
-            if self.hovered.on_click():
-                if isinstance(self.hovered, Button) and self.hovered.once:
-                    self.buttons.remove(self.hovered)
-                    self.adjust_buttons()
-                return True
+        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            if self.hovered:
+                if self.hovered.on_click():
+                    if isinstance(self.hovered, Button) and self.hovered.once:
+                        self.buttons.remove(self.hovered)
+                        self.adjust_buttons()
+                    return True
 
     def update(self):
         self.hovered = None

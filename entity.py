@@ -60,9 +60,9 @@ class Entity:
             pyxel.text(x - 12, y - 8, self.etype, 1)
         elif self.position:
             x, y = self.position
-            pyxel.text(x * 32 + 4, y * 32 + 4, self.etype, 1)
-            if self.name:
-                pyxel.text(x * 32 + 4, y * 32 + 10, self.name, 1)
+            pyxel.text(x * 32 + 4, y * 32 + 4, self.name or self.etype, 1)
+            if self.initiative:
+                pyxel.text(x * 32 + 4, y * 32 + 10, str(self.initiative), 1)
             if self.is_active:
                 pyxel.rectb(x * 32 + 1, y * 32 + 1, 29, 29, 9)
                 pyxel.rectb(x * 32 + 2, y * 32 + 2, 27, 27, 9)
