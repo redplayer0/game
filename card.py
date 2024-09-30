@@ -1,23 +1,35 @@
-from globals import board, entities
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+import pyxel
+
+from globals import entities
 
 
+class Action: ...
+
+
+@dataclass(kw_only=True)
 class Card:
-    def __init__(
-        self,
-        name: str,
-        initiative: int,
-        top: str,
-        bot: str,
-        top_actions=None,
-        bot_actions=None,
-    ):
-        self.name = name
-        self.initiative = initiative
-        self.top = top
-        self.bot = bot
-        self.selected = 0
-        self.top_actions = top_actions or []
-        self.bot_actions = bot_actions or []
+    name: str
+    initiative: int
+    level: int
+    top: list[Action] = field(default_factory=list)
+    bot: list[Action] = field(default_factory=list)
+    x: int = 10
+    y: int = 0
+    w: int = 160
+    h: int = 0
+    is_hovered: bool = False
+    is_discarded: bool = False
+    is_lost: bool = False
+    is_passive: bool = False
+    selected: int = 0
+    on_click: str = None
+
+    def __post_init__(self):
+        self.h = 12 + sum([ability.lines for ability in self.top + self.bot])
 
     def toggle_select(self):
         if self.selected == 0:
@@ -27,9 +39,37 @@ class Card:
         else:
             self.selected = 0
 
+    def update(self, mx, my):
+        x, y, w, h = self.x, self.y, self.w, self.h
+        self.is_hovered = x <= mx <= x + w and y <= my <= y + h
+        return self.is_hovered
+
+    def draw(self):
+        x, y, w, h = self.x, self.y, self.w, self.h
+        col = 6
+        if self.selected == 1:
+            col = 4
+        elif self.selected == 2:
+            col = 14
+        elif self.is_hovered:
+            col = 12
+        pyxel.rect(x, y, w, h, col)
+        pyxel.rectb(x, y, w, h, 1)
+        pyxel.text(x + 4, y + 4, self.title, 0)
+        for iy, ability in enumerate(self.top + self.bot):
+            pyxel.text(x + 4, y + 10 + iy * 6, ability.text, 0)
+
     @property
-    def text(self):
-        return f"{self.initiative} {self.name} {self.selected if self.selected else ""}"
+    def top_description(self):
+        return "\n".join([ability.text for ability in self.top])
+
+    @property
+    def bot_description(self):
+        return "\n".join([ability.text for ability in self.bot])
+
+    @property
+    def title(self):
+        return f"{self.initiative} {self.name} lv: {self.level}"
 
 
 class Move:
@@ -53,11 +93,3 @@ class Move:
 
     def reset(self):
         self.tiles.clear()
-
-
-# @dataclass
-# class Attack:
-#     user: Entity
-#     numtargets: int
-#     range: int
-#     targets: list[Entity] = field(default_factory=list)

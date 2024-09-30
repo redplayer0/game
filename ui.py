@@ -1,116 +1,50 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
 import pyxel
 
-
-class VisualAction:
-    def __init__(self, text, callback):
-        self.text = text
-        self.callback = callback
-        self.x = 10
-        self.w = 220
-        self.h = 20
-        self.hovered = False
-
-    def on_click(self):
-        self.callback()
-
-    def update(self, mx, my, y):
-        x, w, h = self.x, self.w, self.h
-        self.hovered = x <= mx <= x + w and y <= my <= y + h
-        return self.hovered
-
-    def draw(self, y):
-        x, w, h = self.x, self.w, self.h
-        pyxel.rect(x, y, w, h, 6 if not self.hovered else 15)
-        pyxel.rectb(x, y, w, h, 1)
-        pyxel.text(x + 4, y + 4, self.text, 1)
+from card import Card
+from item import Item
 
 
-class VisualCard:
-    def __init__(self, card, callback):
-        self.card = card
-        self.callback = callback
-        self.scroll = 0
-        self.x = 10
-        self.w = 160
-        self.h = 40
-        self.hovered = False
-
-    def on_click(self):
-        self.callback()
-
-    def update(self, mx, my, y):
-        x, w, h = self.x, self.w, self.h
-        self.hovered = x <= mx <= x + w and y <= my <= y + h
-        return self.hovered
-
-    def draw(self, y):
-        x, w, h = self.x, self.w, self.h
-        pyxel.rect(x, y, w, h, 6 if not self.hovered else 15)
-        pyxel.rectb(x, y, w, h, 1)
-        pyxel.text(x + 4, y + 4, self.card.text, 1)
-
-
-class VisualItem:
-    def __init__(self, item):
-        self.item = item
-        self.callback = item.use
-        self.scroll = 0
-        self.x = 10
-        self.w = 80
-        self.h = 40
-        self.hovered = False
-
-    def on_click(self):
-        self.callback()
-
-    def update(self, mx, my, y):
-        x, w, h = self.x, self.w, self.h
-        self.hovered = x <= mx <= x + w and y <= my <= y + h
-        return self.hovered
-
-    def draw(self, y):
-        x, w, h = self.x, self.w, self.h
-        pyxel.rect(x, y, w, h, 6 if not self.hovered else 15)
-        pyxel.rectb(x, y, w, h, 1)
-        pyxel.text(x + 4, y + 4, self.item.text, 1)
-
-
+@dataclass
 class Button:
-    def __init__(self, label: str, callback, once=False):
-        self.label = label
-        self.callback = callback
-        self.width = len(self.label) * 4
-        self.hovered = False
-        self.once = once
-        self.x = 260
-        self.y = 0
-        self.w = self.width + 6
-        self.h = 12
+    label: str
+    callback: str
+    is_hovered: bool = False
+    once: bool = False
+    x: int = 260
+    y: int = 0
+    w: int = 0
+    h: int = 12
+
+    def __post_init__(self):
+        self.w = len(self.label) * 4 + 6
 
     def on_click(self):
         return self.callback()
 
     def update(self, mx, my):
         x, y, w, h = self.x, self.y, self.w, self.h
-        self.hovered = x <= mx <= x + w and y <= my <= y + h
-        return self.hovered
+        self.is_hovered = x <= mx <= x + w and y <= my <= y + h
+        return self.is_hovered
 
     def draw(self):
         x, y, w, h = self.x, self.y, self.w, self.h
-        pyxel.rect(x, y, w, h, 6 if not self.hovered else 15)
+        pyxel.rect(x, y, w, h, 6 if not self.is_hovered else 12)
         pyxel.rectb(x, y, w, h, 1)
-        pyxel.text(x + 4, y + 4, self.label, 1)
+        pyxel.text(x + 4, y + 4, self.label, 0)
 
 
+@dataclass(kw_only=True)
 class Picker:
-    def __init__(self):
-        self.card_scroll = 0
-        self.objects = []
-        self.buttons = []
-        self.hovered = None
+    objects: list[Card | Item] = field(default_factory=list)
+    buttons: list[Button] = field(default_factory=list)
+    hovered: Card = None
 
-    def add_objects(self, obj):
-        self.objects.append(obj)
+    def __post_init__(self):
+        self.adjust()
 
     def add_button(self, button, pos=None):
         if pos:
@@ -123,26 +57,45 @@ class Picker:
         for y, button in enumerate(self.buttons):
             button.y = 6 + y * 16
 
-    def update(self):
-        mx, my = pyxel.mouse_x, pyxel.mouse_y
-        self.hovered = None
-        for button in self.buttons:
-            if button.update(mx, my):
-                self.hovered = button
-        for y, obj in enumerate(self.objects):
-            if obj.update(mx, my, 6 + y * (obj.h + 4)):
-                self.hovered = obj
+    def adjust(self):
+        if self.objects:
+            y = 4
+            for card in self.objects:
+                card.y = y
+                y += card.h + 4
+
+    def scroll(self, value):
+        if value == 1:
+            self.objects.insert(0, self.objects.pop())
+        elif value == -1:
+            self.objects.append(self.objects.pop(0))
 
     def on_click(self):
         if self.hovered:
             if self.hovered.on_click():
-                if self.hovered.once:
+                if isinstance(self.hovered, Button) and self.hovered.once:
                     self.buttons.remove(self.hovered)
                     self.adjust_buttons()
                 return True
 
+    def update(self):
+        self.hovered = None
+        x, y = pyxel.mouse_x, pyxel.mouse_y
+        if value := pyxel.mouse_wheel:
+            if self.objects:
+                self.scroll(value)
+                self.adjust()
+        for obj in self.objects + self.buttons:
+            if obj.update(x, y):
+                self.hovered = obj
+
     def draw(self):
+        for card in self.objects:
+            card.draw()
         for button in self.buttons:
             button.draw()
-        for y, obj in enumerate(self.objects):
-            obj.draw(6 + y * (obj.h + 4))
+
+    def clear(self):
+        for obj in self.objects:
+            if hasattr(obj, "callback"):
+                obj.callback = None

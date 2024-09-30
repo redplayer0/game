@@ -1,6 +1,13 @@
+from __future__ import annotations
+
 import random
+from dataclasses import dataclass, field
+from pprint import pprint
 
 import pyxel
+
+from card import Card
+from item import Item
 
 monster_decks = {}
 
@@ -26,46 +33,36 @@ class Deck:
         self.current = None
 
 
+@dataclass(kw_only=True)
 class Entity:
-    def __init__(self, etype, position, is_enemy=False, name=None):
-        self.etype = etype
-        self.name = name
-        self.position = position
-        self.is_enemy = is_enemy
-        self.is_elite = False
-        self.initiative = 0
-        self.id = random.randint(0, 10000)
-        self.in_hand = False
-        self.cards = []
-        self.items = []
-        self.used_items = []
-        self.has_acted = False
-        self.initiative = None
-        self.is_active = False
-        self.actions = []
-        self.half_selected = None
+    etype: str
+    id: int = None
+    name: str = None
+    is_enemy: bool = False
+    is_elite: bool = False
+    in_hand: bool = False
+    position: tuple[int, int] = None
+    initiative: int = 0
+    half_selected: str | bool = None
+    has_acted: bool = False
+    is_active: bool = False
+    cards: list[Card] = field(default_factory=list)
+    items: list[Item] = field(default_factory=list)
+    actions: list = field(default_factory=list)
+
+    def __post_init__(self):
+        if not self.id:
+            self.id = random.randint(0, 10000)
 
     def draw(self):
-        if self.position and not self.in_hand:
+        if self.in_hand:
+            x, y = pyxel.mouse_x, pyxel.mouse_y
+            pyxel.text(x - 12, y - 8, self.etype, 1)
+        elif self.position:
             x, y = self.position
             pyxel.text(x * 32 + 4, y * 32 + 4, self.etype, 1)
+            if self.name:
+                pyxel.text(x * 32 + 4, y * 32 + 10, self.name, 1)
             if self.is_active:
                 pyxel.rectb(x * 32 + 1, y * 32 + 1, 29, 29, 9)
                 pyxel.rectb(x * 32 + 2, y * 32 + 2, 27, 27, 9)
-
-    def draw_at(self, x, y):
-        pyxel.text(x, y, self.etype, 1)
-
-    # def toggle_select(self, card):
-    #     if card in self.selected_cards:
-    #         self.selected_cards.remove(card)
-    #         self.cards.append(card)
-    #         card.selected = False
-    #         return True
-    #     elif card in self.cards:
-    #         if len(self.selected_cards) > 1:
-    #             self.selected_cards.pop(0)
-    #         self.selected_cards.append(card)
-    #         self.cards.remove(card)
-    #         card.selected = True
-    #         return True
