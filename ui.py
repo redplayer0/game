@@ -42,6 +42,7 @@ class Picker:
     objects: list[Card | Item] = field(default_factory=list)
     buttons: list[Button] = field(default_factory=list)
     hovered: Card = None
+    disable_scroll: bool = False
 
     def __post_init__(self):
         self.adjust()
@@ -60,9 +61,9 @@ class Picker:
     def adjust(self):
         if self.objects:
             y = 4
-            for card in self.objects:
-                card.y = y
-                y += card.h + 4
+            for obj in self.objects:
+                obj.y = y
+                y += obj.h + 4
 
     def scroll(self, value):
         if value == 1:
@@ -82,10 +83,11 @@ class Picker:
     def update(self):
         self.hovered = None
         x, y = pyxel.mouse_x, pyxel.mouse_y
-        if value := pyxel.mouse_wheel:
-            if self.objects:
-                self.scroll(value)
-                self.adjust()
+        if not self.disable_scroll:
+            if value := pyxel.mouse_wheel:
+                if self.objects:
+                    self.scroll(value)
+                    self.adjust()
         for obj in self.objects + self.buttons:
             if obj.update(x, y):
                 self.hovered = obj

@@ -7,9 +7,7 @@ from card import Card
 from entity import Entity
 from globals import action_stack, board, entities, log, messages, pickers, scenario
 from item import Item
-from mechanics import validate_setup
-from states import CardSelection, SetupEntities
-from ui import Button, Picker
+from mechanics import to_entity_setup
 from utils import draw_inner_tile, draw_tile
 
 rose_pine = [
@@ -33,48 +31,52 @@ rose_pine = [
 
 
 def update():
+    # update fading messages
     for msg in messages[:]:
         if msg[1] == 0:
             messages.remove(msg)
         else:
             msg[1] -= 1
-
+    # if current picker has objects do not update hovered tile
     if not pickers[-1].objects:
         mx, my = pyxel.mouse_x, pyxel.mouse_y
         tile = (mx // 32, my // 32)
         scenario.hovered_tile = tile if tile in board else None
+    # update picker
     pickers[-1].update()
-    action_stack[-1].update()
+    # if action stack then update
+    if action_stack:
+        action_stack[-1].update()
+    # try click on picker
     if pickers[-1].on_click():
         return
-    if scenario.active_entity:
-        if scenario.active_entity.actions:
-            scenario.active_entity.actions[-1].update(scenario.hovered_tile)
-            return
-    if action_stack[-1].on_click():
-        action_stack.pop()
+    # try to click for action if did not click for picker
+    if action_stack:
+        if action_stack[-1].on_click():
+            action_stack.pop()
 
 
 def draw():
+    # clear screen
     pyxel.cls(7)
+    # draw board
     for tile, objects in board.items():
         draw_tile(tile, 0)
-    if active := scenario.active_entity:
-        if active.actions:
-            if hasattr(active.actions[-1], "tiles"):
-                for tile in active.actions[-1].tiles:
-                    fill_tile(tile, 6)
+    # draw actions
+    if action_stack:
+        action_stack[-1].draw()
+    # draw cursor
     draw_inner_tile(scenario.hovered_tile, 10)
+    # draw entities
     for e in entities:
         e.draw()
+    # draw pickers
     if not pyxel.btn(pyxel.MOUSE_BUTTON_MIDDLE):
         pickers[-1].draw()
-    # stack = " ".join([a.__name__ for a in action_stack])
-    # pyxel.text(4, 4, stack, 1)
-    # pyxel.text(4, 12, str(len(pickers)), 6)
-    # for y, msg in enumerate(reversed(messages)):
-    #     pyxel.rect(3, 230 - y * 8 - 1, len(msg[0]) * 4 + 1, 7, 6)
-    #     pyxel.text(4, 230 - y * 8, msg[0], 1)
+    # draw action stack for debug
+    # for y, s in enumerate(action_stack):
+    #     pyxel.text(4, 4 + y * 6, str(s), 1)
+    # log view
     n = 5 if len(log) > 5 else len(log)
     for y, msg in enumerate(reversed(log[-n::])):
         if msg[1]:
@@ -86,7 +88,7 @@ def draw():
 
 
 def load():
-    e = Entity(etype="rogue", position=(1, 3))
+    e = Entity(etype="rogue", position=(5, 1))
     e.items = [
         Item("Potion", 3, "Heal 3 hp"),
         Item("Cloak", 5, "Invisible", "body", False),
@@ -96,6 +98,8 @@ def load():
             name="slash",
             initiative=12,
             level=1,
+            top=[Move(range=3)],
+            bot=[Move(range=2)],
         ),
         Card(
             name="hack",
@@ -104,7 +108,7 @@ def load():
         ),
     ]
     entities.append(e)
-    e = Entity(etype="brute", position=(4, 2))
+    e = Entity(etype="brute", position=(5, 3))
     e.cards = [
         Card(
             name="club",
@@ -124,20 +128,7 @@ def main():
     pyxel.init(320, 240, fps=90)
     pyxel.mouse(True)
     # pyxel.colors.from_list(rose_pine)
-    action_stack.append(SetupEntities())
-    ui = Picker()
-    ui.add_button(
-        Button(
-            "Select Cards",
-            validate_setup,
-            once=True,
-        ),
-    )
-    ui.add_button(
-        Button("Exit", lambda: exit()),
-    )
-    pickers.append(ui)
-
+    to_entity_setup()
     pyxel.run(update, draw)
 
 

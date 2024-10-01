@@ -1,10 +1,60 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import pyxel
 
 from actions import Action
+from globals import action_stack
+
+if TYPE_CHECKING:
+    from entity import Entity
+
+
+@dataclass(kw_only=True)
+class Half:
+    half: str
+    actions: list[Action]
+    user: Entity
+    card: Card
+    callback: str = None
+    x: int = 10
+    y: int = 0
+    w: int = 160
+    h: int = 0
+    is_hovered: bool = False
+
+    def __post_init__(self):
+        self.h = 8 + sum([action.lines for action in self.actions]) * 6
+
+    def on_click(self):
+        if self.user.half_selected is None:
+            self.user.half_selected = self.half
+        else:
+            self.user.half_selected = True
+        for action in reversed(self.actions):
+            action.user = self.user
+            action.card = self.card
+            if action.instant:
+                action.execute()
+            else:
+                action_stack.append(action)
+        if self.callback:
+            self.callback()
+        return True
+
+    def update(self, mx, my):
+        x, y, w, h = self.x, self.y, self.w, self.h
+        self.is_hovered = x <= mx <= x + w and y <= my <= y + h
+        return self.is_hovered
+
+    def draw(self):
+        x, y, w, h = self.x, self.y, self.w, self.h
+        pyxel.rect(x, y, w, h, 12 if self.is_hovered else 6)
+        pyxel.rectb(x, y, w, h, 1)
+        for iy, ability in enumerate(self.actions):
+            pyxel.text(x + 4, y + 4 + iy * 6, ability.text, 0)
 
 
 @dataclass(kw_only=True)
@@ -26,7 +76,7 @@ class Card:
     on_click: str = None
 
     def __post_init__(self):
-        self.h = 12 + sum([ability.lines for ability in self.top + self.bot])
+        self.h = 26 + sum([ability.lines for ability in self.top + self.bot]) * 6
 
     def toggle_select(self):
         if self.selected == 0:
@@ -53,8 +103,16 @@ class Card:
         pyxel.rect(x, y, w, h, col)
         pyxel.rectb(x, y, w, h, 1)
         pyxel.text(x + 4, y + 4, self.title, 0)
-        for iy, ability in enumerate(self.top + self.bot):
+        pyxel.text(x + 4, y + 10, "-----", 0)
+        iy = 1
+        for ability in self.top:
             pyxel.text(x + 4, y + 10 + iy * 6, ability.text, 0)
+            iy += 1
+        pyxel.text(x + 4, y + 10 + iy * 6, "-----", 0)
+        iy += 1
+        for ability in self.bot:
+            pyxel.text(x + 4, y + 10 + iy * 6, ability.text, 0)
+            iy += 1
 
     @property
     def top_description(self):

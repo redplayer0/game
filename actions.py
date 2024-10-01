@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pyxel
 
 from globals import entities, scenario
+from utils import fill_tile
 
 if TYPE_CHECKING:
     from card import Card
@@ -17,24 +18,25 @@ class Action:
     half: str = None
     instant: bool = False
     lose: bool = False
-    x: int = 10
-    y: int = 0
-    w: int = 160
-    h: int = 0
-    is_hovered: bool = False
     user: Entity = None
     card: Card = None
+    skippable: bool = True
 
-    def update(self, mx, my):
-        x, y, w, h = self.x, self.y, self.w, self.h
-        self.is_hovered = x <= mx <= x + w and y <= my <= y + h
-        return self.is_hovered
+    def on_click(self):
+        pass
+
+    def update(self):
+        pass
 
     def draw(self):
-        x, y, w, h = self.x, self.y, self.w, self.h
-        pyxel.rect(x, y, w, h, 12 if self.is_hovered else 6)
-        pyxel.rectb(x, y, w, h, 1)
-        pyxel.text(x + 4, y + 4, self.description, 0)
+        pass
+
+    def execute(self):
+        pass
+
+    @property
+    def lines(self):
+        return len(self.text.split("\n"))
 
 
 @dataclass(kw_only=True)
@@ -45,11 +47,18 @@ class Move(Action):
     tiles: list[tuple[int, int]] = field(default_factory=list)
 
     def on_click(self):
-        hovered_tile = scenario.hovered_tile
-        if not hovered_tile:
-            return
-        if hovered_tile not in [e.position for e in entities]:
-            self.tiles.append(hovered_tile)
+        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            hovered_tile = scenario.hovered_tile
+            if not hovered_tile:
+                return
+            if hovered_tile not in [e.position for e in entities]:
+                self.tiles.append(hovered_tile)
+        elif pyxel.btnp(pyxel.MOUSE_BUTTON_RIGHT):
+            self.reset()
+
+    def draw(self):
+        for tile in self.tiles:
+            fill_tile(tile, 11)
 
     def execute(self):
         if self.tiles:
@@ -58,3 +67,8 @@ class Move(Action):
 
     def reset(self):
         self.tiles.clear()
+
+    @property
+    def text(self):
+        move = "Fly" if self.fly else "Jump" if self.jump else "Move"
+        return f"{move} {self.range}"

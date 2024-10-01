@@ -1,22 +1,41 @@
 from __future__ import annotations
 
+from card import Half
 from globals import action_stack, entities, pickers, scenario
-from states import CardSelection
+from states import CardSelection, SetupEntities
 from ui import Button, Picker
 from utils import mlog
 
 
-def open_inventory():
-    def close_inventory():
-        pickers.pop()
-        return True
+def to_entity_setup():
+    action_stack.append(SetupEntities())
+    ui = Picker()
+    ui.add_button(
+        Button(
+            "Select Cards",
+            validate_setup,
+            once=True,
+        ),
+    )
+    ui.add_button(
+        Button("Exit", lambda: exit()),
+    )
+    pickers.append(ui)
 
+
+def close_inventory():
+    pickers.pop()
+    return True
+
+
+def open_inventory():
     if active := scenario.active_entity:
         if active.items:
             ui = Picker()
             ui.add_button(Button("Back", close_inventory))
             for item in active.items:
-                ui.add_objects(VisualItem(item))
+                ui.objects.append(item)
+            ui.adjust()
             pickers.append(ui)
 
 
@@ -36,11 +55,12 @@ def set_active_entity():
 
 def validate_setup():
     if all([e.position for e in entities]):
+        action_stack.pop()
         action_stack.append(CardSelection())
         pickers[-1].add_button(
             Button(
                 "Resolve",
-                callback=first_resolve,
+                callback=initial_resolve,
             ),
             pos=1,
         )
@@ -61,17 +81,88 @@ def check_end_turn():
         return True
 
 
-def first_resolve():
+def initial_resolve():
     if resolve():
+        action_stack.pop()
+        close_action_selection()
+
+
+def close_action_selection():
+    ui = Picker()
+    ui.add_button(
+        Button(
+            "Select Action",
+            callback=open_action_selection,
+            once=True,
+        ),
+    )
+    pickers.append(ui)
+
+
+def selected_action():
+    pickers.pop()
+    ui = Picker()
+    ui.add_button(
+        Button(
+            "Execute action",
+            callback=execute_action,
+            once=True,
+        ),
+    )
+    ui.add_button(
+        Button(
+            "Reset action",
+            callback=reset_action,
+        ),
+    )
+    ui.add_button(
+        Button(
+            "Skip action",
+            callback=skip_action,
+        ),
+    )
+    ui.add_button(
+        Button(
+            "Inventory",
+            open_inventory,
+        ),
+    )
+    pickers.append(ui)
+    return True
+
+
+def open_action_selection():
+    if scenario.active_entity:
+        active = scenario.active_entity
+        if active.actions:
+            return
         ui = Picker()
-        ui.add_button(
-            Button(
-                "Select Action",
-                callback=open_action_selection,
-                once=True,
-            ),
-        )
+        ui.add_button(Button("Back", close_action_selection))
+        for card in [card for card in active.cards if card.selected]:
+            if active.half_selected != "top":
+                ui.objects.append(
+                    Half(
+                        half="top",
+                        actions=card.top,
+                        user=active,
+                        card=card,
+                        callback=selected_action,
+                    )
+                )
+            if active.half_selected != "bot":
+                ui.objects.append(
+                    Half(
+                        half="bot",
+                        actions=card.bot,
+                        user=active,
+                        card=card,
+                        callback=selected_action,
+                    )
+                )
+        ui.adjust()
         pickers.append(ui)
+    else:
+        mlog("How did you get here without active entity")
 
 
 def resolve():
@@ -93,113 +184,42 @@ def resolve():
 
 
 def reset_action():
-    if hasattr(scenario.active_entity.actions[-1], "reset"):
-        scenario.active_entity.actions[-1].reset()
+    if not action_stack:
+        mlog("No actions in action_stack while trying to reset")
+        return
+    if hasattr(action_stack[-1], "reset"):
+        action_stack[-1].reset()
+        return True
+
+
+def skip_action():
+    if not action_stack:
+        mlog("No actions in action_stack while trying to skip")
+        return
+    if action_stack[-1].skippable:
+        mlog("Skipped action")
         return True
 
 
 def execute_action():
-    if hasattr(scenario.active_entity.actions[-1], "execute"):
-        if scenario.active_entity.actions[-1].execute():
-            scenario.active_entity.actions.pop()
-            if scenario.active_entity.actions:
+    if not action_stack:
+        mlog("No actions in action_stack while trying to execute")
+        return
+    if hasattr(action_stack[-1], "execute"):
+        if action_stack[-1].execute():
+            action_stack.pop()
+            if not action_stack:
                 pickers.pop()
-                return True
-            else:
+                mlog(str(scenario.active_entity.half_selected))
                 if scenario.active_entity.half_selected is True:
                     scenario.active_entity.has_acted = True
                     scenario.active_entity.is_active = False
                     pickers.pop()
                     if check_end_turn():
-                        pickers.pop()
+                        # here go to card selection again and do end turn stuff
                         return True
                     else:
-                        return resolve()
+                        resolve()
+                        open_action_selection()
                 else:
-                    pickers.pop()
-                    return True
-
-
-def open_action_selection():
-    def close_action_selection():
-        if scenario.active_entity.actions:
-            pickers.pop()
-            ui = Picker()
-            ui.add_button(
-                Button(
-                    "Execute action",
-                    callback=execute_action,
-                    once=True,
-                ),
-            )
-            ui.add_button(
-                Button(
-                    "Reset action",
-                    callback=reset_action,
-                ),
-            )
-            ui.add_button(
-                Button(
-                    "Inventory",
-                    open_inventory,
-                ),
-            )
-            pickers.append(ui)
-            return True
-        else:
-            pickers.pop()
-            return True
-
-    def set_action(actions, card, half):
-        if scenario.active_entity.half_selected is None:
-            scenario.active_entity.half_selected = half
-        else:
-            scenario.active_entity.half_selected = True
-        for action in reversed(actions):
-            action.user = scenario.active_entity
-            action.card = card
-            if action.instant:
-                action.execute()
-            else:
-                scenario.active_entity.actions.append(action)
-        close_action_selection()
-        return True
-
-    if scenario.active_entity:
-        active = scenario.active_entity
-        if active.actions:
-            return
-        ui = Picker()
-        ui.add_button(Button("Back", close_action_selection))
-        for card in [card for card in active.cards if card.selected]:
-            if active.half_selected != "top":
-                ui.add_objects(
-                    VisualAction(
-                        text=card.top,
-                        callback=lambda: set_action(card.top_actions, card, "top"),
-                    ),
-                )
-            if active.half_selected != "bot":
-                ui.add_objects(
-                    VisualAction(
-                        text=card.bot,
-                        callback=lambda: set_action(card.bot_actions, card, "bot"),
-                    ),
-                )
-        if active.half_selected != "top":
-            ui.add_objects(
-                VisualAction(
-                    text="Default Attack 2",
-                    callback=lambda: set_action([Move(2)], card, "top"),
-                ),
-            )
-        if active.half_selected != "bot":
-            ui.add_objects(
-                VisualAction(
-                    text="Default Move 2",
-                    callback=lambda: set_action([Move(2)], card, "bot"),
-                ),
-            )
-        pickers.append(ui)
-    else:
-        mlog("How did you get here without active entity")
+                    open_action_selection()
