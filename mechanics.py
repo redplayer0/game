@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from card import Half
-from globals import action_stack, entities, pickers, scenario
+from globals import action_stack, entities, pickers, scenario, visuals
 from states import CardSelection, SetupEntities
 from ui import Button, Picker
 from utils import mlog
@@ -181,11 +181,13 @@ def resolve():
         return True
     else:
         mlog("Choose cards for every character")
+        visuals.shake += 10
 
 
 def reset_action():
     if not action_stack:
         mlog("No actions in action_stack while trying to reset")
+        visuals.shake += 5
         return
     if hasattr(action_stack[-1], "reset"):
         action_stack[-1].reset()
@@ -195,8 +197,11 @@ def reset_action():
 def skip_action():
     if not action_stack:
         mlog("No actions in action_stack while trying to skip")
+        visuals.shake += 5
         return
     if action_stack[-1].skippable:
+        # TODO
+        # DO what happens in execute but do not execute
         mlog("Skipped action")
         return True
 
@@ -204,6 +209,7 @@ def skip_action():
 def execute_action():
     if not action_stack:
         mlog("No actions in action_stack while trying to execute")
+        visuals.shake += 5
         return
     if hasattr(action_stack[-1], "execute"):
         if action_stack[-1].execute():
@@ -216,6 +222,7 @@ def execute_action():
                     scenario.active_entity.is_active = False
                     pickers.pop()
                     if check_end_turn():
+                        # TODO
                         # here go to card selection again and do end turn stuff
                         return True
                     else:

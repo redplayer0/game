@@ -5,7 +5,16 @@ import pyxel
 from actions import Move
 from card import Card
 from entity import Entity
-from globals import action_stack, board, entities, log, messages, pickers, scenario
+from globals import (
+    action_stack,
+    board,
+    entities,
+    log,
+    messages,
+    pickers,
+    scenario,
+    visuals,
+)
 from item import Item
 from mechanics import to_entity_setup
 from utils import draw_inner_tile, draw_tile
@@ -31,6 +40,8 @@ rose_pine = [
 
 
 def update():
+    # update visuals and particles
+    visuals.update()
     # update fading messages
     for msg in messages[:]:
         if msg[1] == 0:
@@ -57,6 +68,11 @@ def update():
 
 
 def draw():
+    # screen shake
+    if shake := visuals.shake:
+        sx = pyxel.rndi(-shake, shake)
+        sy = pyxel.rndi(-shake, shake)
+        pyxel.camera(sx, sy)
     # clear screen
     pyxel.cls(7)
     # draw board
@@ -73,6 +89,7 @@ def draw():
     # draw pickers
     if not pyxel.btn(pyxel.MOUSE_BUTTON_MIDDLE):
         pickers[-1].draw()
+    pyxel.camera()
     # draw action stack for debug
     # for y, s in enumerate(action_stack):
     #     pyxel.text(4, 4 + y * 6, str(s), 1)
@@ -125,7 +142,7 @@ def load():
 
 
 def main():
-    pyxel.init(320, 240, fps=90)
+    pyxel.init(320, 240, fps=90, capture_sec=10)
     pyxel.mouse(True)
     # pyxel.colors.from_list(rose_pine)
     to_entity_setup()

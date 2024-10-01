@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 import pyxel
 
-from globals import entities, scenario
-from utils import fill_tile
+from globals import entities, scenario, visuals
+from utils import fill_tile, mlog
 
 if TYPE_CHECKING:
     from card import Card
@@ -64,6 +64,9 @@ class Move(Action):
         if self.tiles:
             self.user.position = self.tiles[-1]
             return True
+        else:
+            mlog(f"Select up to {self.range} tiles to move")
+            visuals.shake += 10
 
     def reset(self):
         self.tiles.clear()
