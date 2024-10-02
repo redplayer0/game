@@ -9,7 +9,7 @@ import actions
 from globals import action_stack
 
 if TYPE_CHECKING:
-    from entity import Character, Monster
+    from entity import Character
 
 
 @dataclass(kw_only=True)
@@ -36,10 +36,7 @@ class Half:
         for action in reversed(self.actions):
             action.user = self.user
             action.card = self.card
-            if action.instant:
-                action.execute()
-            else:
-                action_stack.append(action)
+            action_stack.append(action)
         if self.callback:
             self.callback()
         return True

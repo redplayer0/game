@@ -17,11 +17,16 @@ if TYPE_CHECKING:
 @dataclass(kw_only=True)
 class Action:
     half: str = None
-    instant: bool = False
     lose: bool = False
     user: Character | Monster = None
     card: Card | MonsterCard = None
     skippable: bool = True
+
+    def preview(self):
+        pass
+
+    def ai(self):
+        return True
 
     def on_click(self):
         pass
@@ -54,6 +59,9 @@ class Move(Action):
     tiles: list[tuple[int, int]] = field(default_factory=list)
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1)]
 
+    def ai(self):
+        return True
+
     def on_click(self):
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
             hovered_tile = scenario.hovered_tile
@@ -84,7 +92,7 @@ class Move(Action):
 
     def execute(self):
         if isinstance(self.user, entity.Monster):
-            return True
+            return self.ai()
         if self.tiles:
             self.user.position = self.tiles[-1]
             self.reset()
@@ -114,6 +122,9 @@ class Attack(Action):
     buffs: list[str] = None
     targets: list[tuple[int, int]] = field(default_factory=list)
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1)]
+
+    def ai(self):
+        return True
 
     def on_click(self):
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
@@ -155,7 +166,7 @@ class Attack(Action):
 
     def execute(self):
         if isinstance(self.user, entity.Monster):
-            return True
+            return self.ai()
         if self.targets:
             for target in self.targets:
                 # TODO

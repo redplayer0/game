@@ -184,6 +184,18 @@ def monster_selected_action():
             once=True,
         ),
     )
+    ui.add_button(
+        Button(
+            "Preview action",
+            callback=preview_action,
+        ),
+    )
+    ui.add_button(
+        Button(
+            "Reset action",
+            callback=reset_action,
+        ),
+    )
     pickers.append(ui)
     return True
 
@@ -263,6 +275,15 @@ def skip_action():
         # TODO
         # DO what happens in execute but do not execute
         mlog("Skipped action")
+        return True
+
+
+def preview_action():
+    if not action_stack:
+        mlog("No actions in action_stack while trying to preview")
+        visuals.shake += 5
+    if hasattr(action_stack[-1], "preview"):
+        action_stack[-1].preview()
         return True
 
 

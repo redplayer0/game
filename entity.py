@@ -58,6 +58,10 @@ class Character:
     hp: int = None
     # TODO
 
+    @property
+    def max_hp(self):
+        return self.elv_hp[self.level] if self.is_elite else self.lv_hp[self.level - 1]
+
     def __post_init__(self):
         if not self.id:
             self.id = random.randint(0, 10000)
@@ -72,7 +76,12 @@ class Character:
             pyxel.text(x - 12, y - 8, self.etype, 1)
         elif self.position:
             x, y = self.position
-            pyxel.text(x * 32 + 4, y * 32 + 4, self.name or self.etype, 1)
+            pyxel.text(
+                x * 32 + 4,
+                y * 32 + 4,
+                f"{self.name or self.etype} {self.hp}",
+                1,
+            )
             if self.initiative:
                 pyxel.text(x * 32 + 4, y * 32 + 10, str(self.initiative), 1)
             if self.is_active:
@@ -94,6 +103,7 @@ class Character:
 @dataclass(kw_only=True)
 class Monster:
     etype: str
+    name: str = None
     id: int = None
     is_enemy: bool = True
     is_elite: bool = False
@@ -135,10 +145,19 @@ class Monster:
             self.damage = self.lv_damage[lv]
             self.range = self.lv_range[lv]
 
+    @property
+    def max_hp(self):
+        return self.elv_hp[self.level] if self.is_elite else self.lv_hp[self.level]
+
     def draw(self):
         if self.position:
             x, y = self.position
-            pyxel.text(x * 32 + 4, y * 32 + 4, self.etype, 1)
+            pyxel.text(
+                x * 32 + 4,
+                y * 32 + 4,
+                f"{self.name or self.etype} {self.hp}",
+                1,
+            )
             if self.initiative:
                 pyxel.text(x * 32 + 4, y * 32 + 10, str(self.initiative), 1)
             if self.is_active:
