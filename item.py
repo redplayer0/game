@@ -19,3 +19,8 @@ class Item:
     @property
     def text(self):
         return f"{self.cost} {self.name}"
+
+    @staticmethod
+    def load(data):
+        item = Item(**data)
+        return item

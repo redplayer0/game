@@ -5,6 +5,10 @@ import pyxel
 from globals import log, messages
 
 
+def manhattan_distance(p1, p2):
+    return sum(abs(a - b) for a, b in zip(p1, p2))
+
+
 def message(msg, time=5):
     messages.append([msg, time * 90])
 

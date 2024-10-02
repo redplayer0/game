@@ -5,10 +5,13 @@ from dataclasses import dataclass, field
 from pprint import pprint
 
 import pyxel
+import toml
 
 from card import Card
 from item import Item
 
+classes = toml.load("characters.toml")
+pprint(classes)
 monster_decks = {}
 
 
@@ -48,11 +51,18 @@ class Entity:
     is_active: bool = False
     cards: list[Card] = field(default_factory=list)
     items: list[Item] = field(default_factory=list)
-    actions: list = field(default_factory=list)
+    stamina: int = None
+    level: int = 1
+    exp: int = 0
+    max_hp: int = None
+    hp: list[int] = None
+    # TODO
 
     def __post_init__(self):
         if not self.id:
             self.id = random.randint(0, 10000)
+        if self.position:
+            self.position = tuple(self.position)
 
     def draw(self):
         if self.in_hand:
@@ -66,3 +76,14 @@ class Entity:
             if self.is_active:
                 pyxel.rectb(x * 32 + 1, y * 32 + 1, 29, 29, 9)
                 pyxel.rectb(x * 32 + 2, y * 32 + 2, 27, 27, 9)
+
+    @staticmethod
+    def load(etype):
+        if etype not in classes:
+            return
+        edata = classes[etype]
+        if "cards" in edata:
+            edata["cards"] = [Card.load(data) for data in edata["cards"]]
+        if "items" in edata:
+            edata["items"] = [Item.load(data) for data in edata["items"]]
+        return Entity(**edata)

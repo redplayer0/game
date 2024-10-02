@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import pyxel
 
-from actions import Action
+import actions
 from globals import action_stack
 
 if TYPE_CHECKING:
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 @dataclass(kw_only=True)
 class Half:
     half: str
-    actions: list[Action]
+    actions: list[actions.Action]
     user: Entity
     card: Card
     callback: str = None
@@ -62,8 +62,9 @@ class Card:
     name: str
     initiative: int
     level: int
-    top: list[Action] = field(default_factory=list)
-    bot: list[Action] = field(default_factory=list)
+    top: list[actions.Action] = field(default_factory=list)
+    bot: list[actions.Action] = field(default_factory=list)
+    etype: str = None
     x: int = 10
     y: int = 0
     w: int = 160
@@ -125,3 +126,10 @@ class Card:
     @property
     def title(self):
         return f"{self.initiative} {self.name} lv: {self.level}"
+
+    @staticmethod
+    def load(data):
+        data["top"] = [actions.Action.load(a) for a in data["top"]]
+        data["bot"] = [actions.Action.load(a) for a in data["bot"]]
+        card = Card(**data)
+        return card

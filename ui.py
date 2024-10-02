@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 import pyxel
 
-from card import Card
+from card import Card, Half
 from item import Item
 
 
@@ -14,7 +14,7 @@ class Button:
     callback: str
     is_hovered: bool = False
     once: bool = False
-    x: int = 260
+    x: int = 220
     y: int = 0
     w: int = 0
     h: int = 12
@@ -39,7 +39,7 @@ class Button:
 
 @dataclass(kw_only=True)
 class Picker:
-    objects: list[Card | Item] = field(default_factory=list)
+    objects: list[Card | Half | Item] = field(default_factory=list)
     buttons: list[Button] = field(default_factory=list)
     hovered: Card = None
     disable_scroll: bool = False

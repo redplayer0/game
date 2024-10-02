@@ -54,7 +54,7 @@ def set_active_entity():
 
 
 def validate_setup():
-    if all([e.position for e in entities]):
+    if all([e.position for e in entities if e.is_enemy == False]):
         action_stack.pop()
         action_stack.append(CardSelection())
         pickers[-1].add_button(
@@ -78,6 +78,7 @@ def check_end_turn():
         scenario.active_entity = None
         mlog(f"Turn {scenario.turn} is over!")
         scenario.turn += 1
+        action_stack.append(CardSelection())
         return True
 
 
@@ -134,9 +135,7 @@ def selected_action():
 def open_action_selection():
     if scenario.active_entity:
         active = scenario.active_entity
-        if active.actions:
-            return
-        ui = Picker()
+        ui = Picker(disable_scroll=True)
         ui.add_button(Button("Back", close_action_selection))
         for card in [card for card in active.cards if card.selected]:
             if active.half_selected != "top":
@@ -166,7 +165,10 @@ def open_action_selection():
 
 
 def resolve():
-    if all(e.initiative for e in entities):
+    if all(e.initiative for e in entities if e.is_enemy == False):
+        for e in entities:
+            if e.is_enemy:
+                e.initiative = 100
         entities.sort(
             key=lambda e: (
                 e.has_acted,
@@ -181,7 +183,7 @@ def resolve():
         return True
     else:
         mlog("Choose cards for every character")
-        visuals.shake += 10
+        visuals.shake += 5
 
 
 def reset_action():
@@ -216,7 +218,6 @@ def execute_action():
             action_stack.pop()
             if not action_stack:
                 pickers.pop()
-                mlog(str(scenario.active_entity.half_selected))
                 if scenario.active_entity.half_selected is True:
                     scenario.active_entity.has_acted = True
                     scenario.active_entity.is_active = False

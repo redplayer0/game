@@ -105,40 +105,10 @@ def draw():
 
 
 def load():
-    e = Entity(etype="rogue", position=(5, 1))
-    e.items = [
-        Item("Potion", 3, "Heal 3 hp"),
-        Item("Cloak", 5, "Invisible", "body", False),
-    ]
-    e.cards = [
-        Card(
-            name="slash",
-            initiative=12,
-            level=1,
-            top=[Move(range=3)],
-            bot=[Move(range=2)],
-        ),
-        Card(
-            name="hack",
-            initiative=87,
-            level=1,
-        ),
-    ]
-    entities.append(e)
-    e = Entity(etype="brute", position=(5, 3))
-    e.cards = [
-        Card(
-            name="club",
-            initiative=12,
-            level=1,
-        ),
-        Card(
-            name="smash",
-            initiative=87,
-            level=1,
-        ),
-    ]
-    entities.append(e)
+    entities.append(Entity.load("rogue"))
+    # entities.append(Entity.load("bandit"))
+    for e in entities:
+        print(e.etype, e.is_enemy)
 
 
 def main():
