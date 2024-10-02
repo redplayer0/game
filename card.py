@@ -9,14 +9,14 @@ import actions
 from globals import action_stack
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from entity import Character, Monster
 
 
 @dataclass(kw_only=True)
 class Half:
     half: str
     actions: list[actions.Action]
-    user: Entity
+    user: Character
     card: Card
     callback: str = None
     x: int = 10
@@ -132,4 +132,61 @@ class Card:
         data["top"] = [actions.Action.load(a) for a in data["top"]]
         data["bot"] = [actions.Action.load(a) for a in data["bot"]]
         card = Card(**data)
+        return card
+
+
+@dataclass(kw_only=True)
+class MonsterCard:
+    initiative: int
+    shuffle: bool = False
+    actions: list[actions.Action] = field(default_factory=list)
+    x: int = 10
+    y: int = 0
+    w: int = 160
+    h: int = 0
+    is_hovered: bool = False
+    is_discarded: bool = False
+    is_lost: bool = False
+    is_passive: bool = False
+    selected: bool = False
+    on_click: str = None
+
+    def __post_init__(self):
+        self.h = 26 + sum([ability.lines for ability in self.actions]) * 6
+
+    def update(self, mx, my):
+        x, y, w, h = self.x, self.y, self.w, self.h
+        self.is_hovered = x <= mx <= x + w and y <= my <= y + h
+        return self.is_hovered
+
+    def draw(self):
+        x, y, w, h = self.x, self.y, self.w, self.h
+        col = 6
+        if self.selected == 1:
+            col = 4
+        elif self.selected == 2:
+            col = 14
+        elif self.is_hovered:
+            col = 12
+        pyxel.rect(x, y, w, h, col)
+        pyxel.rectb(x, y, w, h, 1)
+        pyxel.text(x + 4, y + 4, self.title, 0)
+        pyxel.text(x + 4, y + 10, "-----", 0)
+        iy = 1
+        for ability in self.actions:
+            pyxel.text(x + 4, y + 10 + iy * 6, ability.text, 0)
+            iy += 1
+
+    @property
+    def description(self):
+        return "\n".join([ability.text for ability in self.actions])
+
+    @property
+    def title(self):
+        return f"Initiative {self.initiative}"
+
+    @staticmethod
+    def load(data):
+        data["actions"] = [actions.Action.load(a) for a in data["actions"]]
+        card = MonsterCard(**data)
         return card

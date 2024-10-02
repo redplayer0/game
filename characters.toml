@@ -2,8 +2,7 @@
 # class data ------------
 etype = "rogue"
 stamina = 11
-max_hp = [8, 9, 11, 12, 14, 15, 17, 18, 20]
-hp = 8
+lv_hp = [8, 9, 11, 12, 14, 15, 17, 18, 20]
 position = [5, 1]
 # card ------------------
 [[rogue.cards]]
@@ -14,12 +13,6 @@ level = 1
 action = 'Move'
 range = 3
 fly = true
-[[rogue.cards.top]]
-action = 'Attack'
-num_targets = 3
-damage = 3
-pierce = 2
-inflicts = ["stun"]
 [[rogue.cards.bot]]
 action = 'Move'
 range = 3
@@ -36,93 +29,3 @@ damage = 2
 action = 'Move'
 range = 6
 fly = true
-
-[bandit]
-# class data ------------
-etype = "bandit"
-is_enemy = true
-lv_hp = [5, 6, 6, 9]
-lv_mov = [2, 3, 3, 3]
-lv_damage = [2, 2, 3, 3]
-lv_range = [1, 1, 1, 1]
-elv_hp = [9, 9, 10, 10]
-elv_mov = [2, 2, 2, 3]
-elv_damage = [3, 3, 4, 4]
-elv_range = [1, 1, 1, 1]
-# card ------------------
-[[bandit.cards]]
-initiative = 15
-shuffle = true
-[[bandit.cards.actions]]
-action = 'Shield'
-value = 1
-[[bandit.cards.actions]]
-action = 'Retaliate'
-damage = 2
-# card ------------------
-[[bandit.cards]]
-initiative = 30
-[[bandit.cards.actions]]
-action = 'Move'
-range = 1
-[[bandit.cards.actions]]
-action = 'Attack'
-damage = -1
-# card ------------------
-[[bandit.cards]]
-initiative = 35
-[[bandit.cards.actions]]
-action = 'Move'
-range = -1
-[[bandit.cards.actions]]
-action = 'Attack'
-damage = 0
-range = 2
-# card ------------------
-[[bandit.cards]]
-initiative = 50
-[[bandit.cards.actions]]
-action = 'Move'
-range = 0
-[[bandit.cards.actions]]
-action = 'Attack'
-damage = 0
-# card ------------------
-[[bandit.cards]]
-initiative = 50
-[[bandit.cards.actions]]
-action = 'Move'
-range = 0
-[[bandit.cards.actions]]
-action = 'Attack'
-damage = 0
-# card ------------------
-[[bandit.cards]]
-initiative = 70
-[[bandit.cards.actions]]
-action = 'Move'
-range = -1
-[[bandit.cards.actions]]
-action = 'Attack'
-damage = +1
-# card ------------------
-[[bandit.cards]]
-initiative = 55
-[[bandit.cards.actions]]
-action = 'Move'
-range = -1
-[[bandit.cards.actions]]
-action = 'Attack'
-damage = 0
-buff = ['strengthen']
-# card ------------------
-[[bandit.cards]]
-initiative = 15
-shuffle = true
-[[bandit.cards.actions]]
-action = 'Shield'
-value = 1
-[[bandit.cards.actions]]
-action = 'Attack'
-damage = 0
-inflicts = ['poison']

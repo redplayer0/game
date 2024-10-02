@@ -1,7 +1,19 @@
 from __future__ import annotations
 
+from copy import copy
+from random import choice
+
 from card import Half
-from globals import action_stack, entities, pickers, scenario, visuals
+from entity import Character, Monster
+from globals import (
+    action_stack,
+    entities,
+    monster_decks,
+    monster_selected_cards,
+    pickers,
+    scenario,
+    visuals,
+)
 from states import CardSelection, SetupEntities
 from ui import Button, Picker
 from utils import mlog
@@ -54,7 +66,7 @@ def set_active_entity():
 
 
 def validate_setup():
-    if all([e.position for e in entities if e.is_enemy == False]):
+    if all([e.position for e in entities if isinstance(e, Character)]):
         action_stack.pop()
         action_stack.append(CardSelection())
         pickers[-1].add_button(
@@ -69,23 +81,54 @@ def validate_setup():
 
 def check_end_turn():
     if all(e.has_acted for e in entities):
+        for mt, card in monster_selected_cards.items():
+            card.selected = False
+            card.is_discarded = True
+            monster_selected_cards[mt] = None
         for e in entities:
-            for c in e.cards:
-                c.selected = 0
-            e.has_acted = False
-            e.half_selected = None
+            if isinstance(e, Character):
+                for c in e.cards:
+                    # TODO
+                    # here discard card maybe
+                    c.selected = 0
+                e.half_selected = None
             e.initiative = 0
+            e.has_acted = False
         scenario.active_entity = None
         mlog(f"Turn {scenario.turn} is over!")
+        # TODO
+        # do end turn stuff here
         scenario.turn += 1
+        mlog(f"Turn {scenario.turn}! Select cards!")
         action_stack.append(CardSelection())
         return True
 
 
 def initial_resolve():
-    if resolve():
+    if all(e.initiative for e in entities if not e.is_enemy):
+        draw_monster_cards()
+        for e in entities:
+            if isinstance(e, Monster):
+                e.initiative = monster_selected_cards[e.etype].initiative
+        resolve()
         action_stack.pop()
-        close_action_selection()
+    else:
+        mlog("Choose cards for every character")
+        visuals.shake += 5
+
+
+def draw_monster_cards():
+    monster_types = [e.etype for e in entities if isinstance(e, Monster)]
+    for mt in monster_types:
+        if mt not in monster_decks or mt not in monster_selected_cards:
+            print(f"ERROR {mt} not in decks or initiatives")
+            return
+        selected_card = choice(
+            [card for card in monster_decks[mt] if not card.is_discarded]
+        )
+        selected_card.selected = True
+        monster_selected_cards[mt] = selected_card
+    mlog("Drew cards for monsters")
 
 
 def close_action_selection():
@@ -132,8 +175,21 @@ def selected_action():
     return True
 
 
+def monster_selected_action():
+    ui = Picker()
+    ui.add_button(
+        Button(
+            "Execute action",
+            callback=execute_action,
+            once=True,
+        ),
+    )
+    pickers.append(ui)
+    return True
+
+
 def open_action_selection():
-    if scenario.active_entity:
+    if scenario.active_entity and isinstance(scenario.active_entity, Character):
         active = scenario.active_entity
         ui = Picker(disable_scroll=True)
         ui.add_button(Button("Back", close_action_selection))
@@ -165,25 +221,27 @@ def open_action_selection():
 
 
 def resolve():
-    if all(e.initiative for e in entities if e.is_enemy == False):
-        for e in entities:
-            if e.is_enemy:
-                e.initiative = 100
-        entities.sort(
-            key=lambda e: (
-                e.has_acted,
-                e.initiative,
-                e.is_elite,
-                e.id,
-            )
+    entities.sort(
+        key=lambda e: (
+            e.has_acted,
+            e.initiative,
+            e.is_elite,
+            e.id,
         )
-        scenario.active_entity = entities[0]
-        scenario.active_entity.is_active = True
-        mlog(f"{scenario.active_entity.etype}'s turn!")
-        return True
+    )
+    scenario.active_entity = entities[0]
+    scenario.active_entity.is_active = True
+    if isinstance(scenario.active_entity, Character):
+        open_action_selection()
     else:
-        mlog("Choose cards for every character")
-        visuals.shake += 5
+        mt = scenario.active_entity.etype
+        for card_action in reversed(monster_selected_cards[mt].actions):
+            action = copy(card_action)
+            action.user = scenario.active_entity
+            action_stack.append(action)
+        monster_selected_action()
+    mlog(f"{scenario.active_entity.etype}'s turn!")
+    return True
 
 
 def reset_action():
@@ -218,16 +276,20 @@ def execute_action():
             action_stack.pop()
             if not action_stack:
                 pickers.pop()
-                if scenario.active_entity.half_selected is True:
+                if isinstance(scenario.active_entity, Character):
+                    if scenario.active_entity.half_selected is True:
+                        scenario.active_entity.has_acted = True
+                        scenario.active_entity.is_active = False
+                        if check_end_turn():
+                            return True
+                        else:
+                            resolve()
+                    else:
+                        open_action_selection()
+                else:
                     scenario.active_entity.has_acted = True
                     scenario.active_entity.is_active = False
-                    pickers.pop()
                     if check_end_turn():
-                        # TODO
-                        # here go to card selection again and do end turn stuff
                         return True
                     else:
                         resolve()
-                        open_action_selection()
-                else:
-                    open_action_selection()

@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING
 
 import pyxel
 
+import entity
 from globals import entities, scenario, visuals
 from utils import fill_tile, manhattan_distance, mlog
 
 if TYPE_CHECKING:
-    from card import Card
-    from entity import Entity
+    from card import Card, MonsterCard
+    from entity import Character, Monster
 
 
 @dataclass(kw_only=True)
@@ -18,8 +19,8 @@ class Action:
     half: str = None
     instant: bool = False
     lose: bool = False
-    user: Entity = None
-    card: Card = None
+    user: Character | Monster = None
+    card: Card | MonsterCard = None
     skippable: bool = True
 
     def on_click(self):
@@ -82,6 +83,8 @@ class Move(Action):
             pyxel.text(x * 32 + 24, y * 32 + 20, str(i + 1), 1)
 
     def execute(self):
+        if isinstance(self.user, entity.Monster):
+            return True
         if self.tiles:
             self.user.position = self.tiles[-1]
             self.reset()
@@ -151,6 +154,8 @@ class Attack(Action):
             pyxel.text(x * 32 + 24, y * 32 + 20, str(i + 1), 1)
 
     def execute(self):
+        if isinstance(self.user, entity.Monster):
+            return True
         if self.targets:
             for target in self.targets:
                 # TODO

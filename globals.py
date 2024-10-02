@@ -20,3 +20,5 @@ log = []
 board = {(x, y): [] for x in range(6) for y in range(6)}
 scenario = Scenario()
 visuals = Visuals()
+monster_decks = {}
+monster_selected_cards = {}

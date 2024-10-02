@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import pyxel
 
-from actions import Move
-from card import Card
-from entity import Entity
+from entity import Character, Monster
 from globals import (
     action_stack,
     board,
@@ -15,7 +13,6 @@ from globals import (
     scenario,
     visuals,
 )
-from item import Item
 from mechanics import to_entity_setup
 from utils import draw_inner_tile, draw_tile
 
@@ -103,10 +100,14 @@ def draw():
         pyxel.rect(3, 230 - y * 8 - 1, len(text) * 4 + 1, 7, 6)
         pyxel.text(4, 230 - y * 8, text, 1)
 
+    pyxel.text(4, 4, str(len(pickers)), 1)
+
 
 def load():
-    entities.append(Entity.load("rogue"))
-    # entities.append(Entity.load("bandit"))
+    entities.append(Character.load("rogue"))
+    bg = Monster.load("bandit_guard")
+    bg.position = (5, 3)
+    entities.append(bg)
     for e in entities:
         print(e.etype, e.is_enemy)
 
