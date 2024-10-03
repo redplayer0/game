@@ -100,7 +100,7 @@ def draw():
         pyxel.rect(3, 230 - y * 8 - 1, len(text) * 4 + 1, 7, 6)
         pyxel.text(4, 230 - y * 8, text, 1)
 
-    pyxel.text(4, 4, str(len(pickers)), 1)
+    pyxel.text(4, 4, f"pickers: {len(pickers)}", 1)
 
 
 def load():

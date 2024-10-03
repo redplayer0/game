@@ -59,6 +59,18 @@ class Move(Action):
     tiles: list[tuple[int, int]] = field(default_factory=list)
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1)]
 
+    @property
+    def _range(self):
+        if isinstance(self.user, entity.Monster):
+            return self.range + self.user.mov
+        else:
+            return self.range
+
+    @property
+    def _fly(self):
+        if isinstance(self.user, entity.Monster):
+            return "fly" in self.user.attrs or self.fly
+
     def ai(self):
         return True
 
@@ -70,8 +82,8 @@ class Move(Action):
             if self.tiles and hovered_tile == self.tiles[-1]:
                 self.tiles.pop()
                 return
-            if len(self.tiles) == self.range:
-                mlog(f"You can select up to {self.range} tiles to move")
+            if len(self.tiles) == self._range:
+                mlog(f"You can select up to {self._range} tiles to move")
                 visuals.shake += 5
                 return
             if hovered_tile not in [e.position for e in entities] + self.tiles:
@@ -91,14 +103,14 @@ class Move(Action):
             pyxel.text(x * 32 + 24, y * 32 + 20, str(i + 1), 1)
 
     def execute(self):
-        if isinstance(self.user, entity.Monster):
-            return self.ai()
+        # if isinstance(self.user, entity.Monster):
+        #     return self.ai()
         if self.tiles:
             self.user.position = self.tiles[-1]
             self.reset()
             return True
         else:
-            mlog(f"Select up to {self.range} tiles to move")
+            mlog(f"Select up to {self._range} tiles to move")
             visuals.shake += 10
 
     def reset(self):
