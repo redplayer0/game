@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
-from pprint import pprint
 
 import pyxel
 import toml
@@ -15,48 +14,47 @@ classes = toml.load("characters.toml")
 monsters = toml.load("monsters.toml")
 
 
-class Deck:
-    def __init__(self):
-        self.cards = []
-        self.current = None
-
-    def add_card(self, card):
-        self.cards.append(card)
-
-    def choose(self):
-        self.current = random.choice(
-            [card for card in self.cards if not card.discarded]
-        )
-
-    def cleanup(self):
-        self.current.discarded = True
-        if self.current.shuffle:
-            for card in self.cards:
-                card.discarded = False
-        self.current = None
-
-
 @dataclass(kw_only=True)
-class Character:
+class Entity:
     etype: str
-    id: int = None
     name: str = None
+    id: int = None
     is_enemy: bool = False
     is_elite: bool = False
-    in_hand: bool = False
     position: tuple[int, int] = None
     initiative: int = 0
-    half_selected: str | bool = None
     has_acted: bool = False
     is_active: bool = False
     cards: list[Card] = field(default_factory=list)
-    items: list[Item] = field(default_factory=list)
-    stamina: int = None
-    level: int = 1
-    exp: int = 0
+    level: int = 0
     lv_hp: list[int] = None
     hp: int = None
-    # TODO
+    on_hit_effects: list[callable] = field(default_factory=list)
+    on_move_effects: list[callable] = field(default_factory=list)
+
+    def draw(self):
+        if self.position:
+            x, y = self.position
+            pyxel.text(
+                x * 32 + 4,
+                y * 32 + 4,
+                f"{self.name or self.etype} {self.hp}",
+                1,
+            )
+            if self.initiative:
+                pyxel.text(x * 32 + 4, y * 32 + 10, str(self.initiative), 1)
+            if self.is_active:
+                pyxel.rectb(x * 32 + 1, y * 32 + 1, 29, 29, 9)
+                pyxel.rectb(x * 32 + 2, y * 32 + 2, 27, 27, 9)
+
+
+@dataclass(kw_only=True)
+class Character(Entity):
+    in_hand: bool = False
+    half_selected: str | bool = None
+    stamina: int = None
+    exp: int = 0
+    hp: int = None
 
     @property
     def max_hp(self):
@@ -74,19 +72,8 @@ class Character:
         if self.in_hand:
             x, y = pyxel.mouse_x, pyxel.mouse_y
             pyxel.text(x - 12, y - 8, self.etype, 1)
-        elif self.position:
-            x, y = self.position
-            pyxel.text(
-                x * 32 + 4,
-                y * 32 + 4,
-                f"{self.name or self.etype} {self.hp}",
-                1,
-            )
-            if self.initiative:
-                pyxel.text(x * 32 + 4, y * 32 + 10, str(self.initiative), 1)
-            if self.is_active:
-                pyxel.rectb(x * 32 + 1, y * 32 + 1, 29, 29, 9)
-                pyxel.rectb(x * 32 + 2, y * 32 + 2, 27, 27, 9)
+            return
+        super().draw()
 
     @staticmethod
     def load(etype):
@@ -101,18 +88,7 @@ class Character:
 
 
 @dataclass(kw_only=True)
-class Monster:
-    etype: str
-    name: str = None
-    id: int = None
-    is_enemy: bool = True
-    is_elite: bool = False
-    position: tuple[int, int] = None
-    initiative: int = 0
-    has_acted: bool = False
-    is_active: bool = False
-    cards: list[Card] = None
-    lv_hp: list[int] = None
+class Monster(Entity):
     lv_mov: list[int] = None
     lv_damage: list[int] = None
     lv_range: list[int] = None
@@ -124,7 +100,6 @@ class Monster:
     mov: int = None
     damage: int = None
     range: int = None
-    level: int = 0
 
     def __post_init__(self):
         if not self.id:
@@ -148,21 +123,6 @@ class Monster:
     @property
     def max_hp(self):
         return self.elv_hp[self.level] if self.is_elite else self.lv_hp[self.level]
-
-    def draw(self):
-        if self.position:
-            x, y = self.position
-            pyxel.text(
-                x * 32 + 4,
-                y * 32 + 4,
-                f"{self.name or self.etype} {self.hp}",
-                1,
-            )
-            if self.initiative:
-                pyxel.text(x * 32 + 4, y * 32 + 10, str(self.initiative), 1)
-            if self.is_active:
-                pyxel.rectb(x * 32 + 1, y * 32 + 1, 29, 29, 9)
-                pyxel.rectb(x * 32 + 2, y * 32 + 2, 27, 27, 9)
 
     @staticmethod
     def load(etype):

@@ -11,7 +11,7 @@ from utils import fill_tile, manhattan_distance, mlog
 
 if TYPE_CHECKING:
     from card import Card, MonsterCard
-    from entity import Character, Monster
+    from entity import Character, Entity, Monster
 
 
 @dataclass(kw_only=True)
@@ -103,8 +103,8 @@ class Move(Action):
             pyxel.text(x * 32 + 24, y * 32 + 20, str(i + 1), 1)
 
     def execute(self):
-        # if isinstance(self.user, entity.Monster):
-        #     return self.ai()
+        if isinstance(self.user, entity.Monster):
+            return self.ai()
         if self.tiles:
             self.user.position = self.tiles[-1]
             self.reset()
@@ -206,3 +206,51 @@ class Attack(Action):
         if self.num_targets > 1:
             attack += f" [x{self.num_targets}]"
         return attack
+
+
+@dataclass(kw_only=True)
+class Effect:
+    holder: Entity
+    turns: int = 1
+    procs: int = 0
+
+    def execute(self, **kwargs):
+        pass
+
+
+@dataclass(kw_only=True)
+class ShieldEffect(Effect):
+    value: int
+
+    def execute(self, attack: Attack, **kwargs):
+        attack.damage -= max(0, self.value - attack.pierce)
+
+
+@dataclass(kw_only=True)
+class Shield(Action):
+    value: int
+
+    def execute(self):
+        print("executed sheild")
+        # try:
+        #     self.user.on_hit_effects.append(ShieldEffect(value=self.value))
+        # except:
+        #     pass
+        return True
+
+    @property
+    def text(self):
+        return f"Shield {self.value}"
+
+
+@dataclass(kw_only=True)
+class Retaliate(Action):
+    damage: int
+
+    def execute(self):
+        print("executed retaliate")
+        return True
+
+    @property
+    def text(self):
+        return f"Retaliate {self.damage}"

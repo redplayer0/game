@@ -110,8 +110,8 @@ def initial_resolve():
         for e in entities:
             if isinstance(e, Monster):
                 e.initiative = monster_selected_cards[e.etype].initiative
+        action_stack.clear()
         resolve()
-        action_stack.pop()
     else:
         mlog("Choose cards for every character")
         visuals.shake += 5
@@ -132,15 +132,21 @@ def draw_monster_cards():
 
 
 def close_action_selection():
+    pickers.pop()
     ui = Picker()
     ui.add_button(
         Button(
             "Select Action",
-            callback=open_action_selection,
+            callback=reopen_action_selection,
             once=True,
         ),
     )
     pickers.append(ui)
+
+
+def reopen_action_selection():
+    pickers.pop()
+    open_action_selection()
 
 
 def selected_action():
@@ -251,6 +257,7 @@ def resolve():
             action = copy(card_action)
             action.user = scenario.active_entity
             action_stack.append(action)
+            print(action.__class__)
         monster_selected_action()
     mlog(f"{scenario.active_entity.etype}'s turn!")
     return True
@@ -295,22 +302,27 @@ def execute_action():
     if hasattr(action_stack[-1], "execute"):
         if action_stack[-1].execute():
             action_stack.pop()
-            if not action_stack:
-                pickers.pop()
-                if isinstance(scenario.active_entity, Character):
+            if isinstance(scenario.active_entity, Character):
+                if not action_stack:
                     if scenario.active_entity.half_selected is True:
                         scenario.active_entity.has_acted = True
                         scenario.active_entity.is_active = False
                         if check_end_turn():
+
                             return True
                         else:
+                            pickers.pop()
                             resolve()
                     else:
+                        pickers.pop()
                         open_action_selection()
-                else:
+            else:
+                if not action_stack:
                     scenario.active_entity.has_acted = True
                     scenario.active_entity.is_active = False
                     if check_end_turn():
+                        pickers.pop()
                         return True
                     else:
+                        pickers.pop()
                         resolve()

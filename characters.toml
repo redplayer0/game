@@ -5,6 +5,7 @@ name = "rg"
 stamina = 11
 lv_hp = [8, 9, 11, 12, 14, 15, 17, 18, 20]
 position = [5, 1]
+level = 1
 # card ------------------
 [[rogue.cards]]
 name = "slash"

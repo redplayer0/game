@@ -37,6 +37,7 @@ rose_pine = [
 
 
 def update():
+    # print([a.__class__.__name__ for a in action_stack])
     # update visuals and particles
     visuals.update()
     # update fading messages
@@ -100,7 +101,12 @@ def draw():
         pyxel.rect(3, 230 - y * 8 - 1, len(text) * 4 + 1, 7, 6)
         pyxel.text(4, 230 - y * 8, text, 1)
 
-    pyxel.text(4, 4, f"pickers: {len(pickers)}", 1)
+    if action_stack:
+        pyxel.text(4, 4, f"Action: {action_stack[-1].__class__.__name__}", 1)
+    pyxel.text(4, 10, f"pickers: {len(pickers)}", 1)
+    # if action_stack:
+    #     pyxel.text(4, 4, f"{action_stack[-1].__class__.__name__}", 1)
+    # pyxel.text(4, 10, f"action_stack: {len(action_stack)}", 1)
 
 
 def load():

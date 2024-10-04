@@ -11,35 +11,35 @@ elv_hp = [9, 9, 10, 10]
 elv_mov = [2, 2, 2, 3]
 elv_damage = [3, 3, 4, 4]
 elv_range = [1, 1, 1, 1]
-# # card ------------------
-# [[bandit_guard.cards]]
-# initiative = 15
-# shuffle = true
-# [[bandit_guard.cards.actions]]
-# action = 'Shield'
-# value = 1
-# [[bandit_guard.cards.actions]]
-# action = 'Retaliate'
-# damage = 2
-# # card ------------------
-# [[bandit_guard.cards]]
-# initiative = 30
-# [[bandit_guard.cards.actions]]
-# action = 'Move'
-# range = 1
-# [[bandit_guard.cards.actions]]
-# action = 'Attack'
-# damage = -1
-# # card ------------------
-# [[bandit_guard.cards]]
-# initiative = 35
-# [[bandit_guard.cards.actions]]
-# action = 'Move'
-# range = -1
-# [[bandit_guard.cards.actions]]
-# action = 'Attack'
-# damage = 0
-# range = 2
+# card ------------------
+[[bandit_guard.cards]]
+initiative = 15
+shuffle = true
+[[bandit_guard.cards.actions]]
+action = 'Shield'
+value = 1
+[[bandit_guard.cards.actions]]
+action = 'Retaliate'
+damage = 2
+# card ------------------
+[[bandit_guard.cards]]
+initiative = 30
+[[bandit_guard.cards.actions]]
+action = 'Move'
+range = 1
+[[bandit_guard.cards.actions]]
+action = 'Attack'
+damage = -1
+# card ------------------
+[[bandit_guard.cards]]
+initiative = 35
+[[bandit_guard.cards.actions]]
+action = 'Move'
+range = -1
+[[bandit_guard.cards.actions]]
+action = 'Attack'
+damage = 0
+range = 2
 # card ------------------
 [[bandit_guard.cards]]
 initiative = 50
@@ -58,33 +58,33 @@ range = 0
 [[bandit_guard.cards.actions]]
 action = 'Attack'
 damage = 0
-# # card ------------------
-# [[bandit_guard.cards]]
-# initiative = 70
-# [[bandit_guard.cards.actions]]
-# action = 'Move'
-# range = -1
-# [[bandit_guard.cards.actions]]
-# action = 'Attack'
-# damage = +1
-# # card ------------------
-# [[bandit_guard.cards]]
-# initiative = 55
-# [[bandit_guard.cards.actions]]
-# action = 'Move'
-# range = -1
-# [[bandit_guard.cards.actions]]
-# action = 'Attack'
-# damage = 0
-# buff = ['strengthen']
-# # card ------------------
-# [[bandit_guard.cards]]
-# initiative = 15
-# shuffle = true
-# [[bandit_guard.cards.actions]]
-# action = 'Shield'
-# value = 1
-# [[bandit_guard.cards.actions]]
-# action = 'Attack'
-# damage = 0
-# inflicts = ['poison']
+# card ------------------
+[[bandit_guard.cards]]
+initiative = 70
+[[bandit_guard.cards.actions]]
+action = 'Move'
+range = -1
+[[bandit_guard.cards.actions]]
+action = 'Attack'
+damage = +1
+# card ------------------
+[[bandit_guard.cards]]
+initiative = 55
+[[bandit_guard.cards.actions]]
+action = 'Move'
+range = -1
+[[bandit_guard.cards.actions]]
+action = 'Attack'
+damage = 0
+buffs = ['strengthen']
+# card ------------------
+[[bandit_guard.cards]]
+initiative = 15
+shuffle = true
+[[bandit_guard.cards.actions]]
+action = 'Shield'
+value = 1
+[[bandit_guard.cards.actions]]
+action = 'Attack'
+damage = 0
+inflicts = ['poison']
