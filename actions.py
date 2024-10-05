@@ -7,7 +7,9 @@ from typing import TYPE_CHECKING
 import pyxel
 
 import entity
-from globals import entities, scenario, visuals
+from globals import action_stack, entities, pickers, scenario, visuals
+from mechanics import post_execution
+from ui import Button, Picker
 from utils import fill_tile, manhattan_distance, mlog
 
 if TYPE_CHECKING:
@@ -153,11 +155,10 @@ class Attack(Action):
                 return
             for e in entities:
                 if hovered_tile == e.position:
-                    if not e.is_enemy:
+                    if not e.is_enemy != self.user.is_enemy:
                         visuals.shake += 5
                         mlog("Must target enemy")
                         return
-
                     if (
                         manhattan_distance(hovered_tile, self.user.position)
                         <= self.range
@@ -178,14 +179,17 @@ class Attack(Action):
             pyxel.text(x * 32 + 24, y * 32 + 20, str(i + 1), 1)
 
     def execute(self):
-        if isinstance(self.user, entity.Monster):
-            return self.ai()
+        # if isinstance(self.user, entity.Monster):
+        #     return self.ai()
         if self.targets:
-            for target in self.targets:
-                cloned_attack = copy(self)
-                for effect in target.on_hit_effects:
-                    effect.execute(cloned_attack)
-                target.hp -= cloned_attack.damage
+            for target in reversed(self.targets):
+                action_stack.insert(
+                    -1,
+                    ApplyAttack(
+                        target=target,
+                        attack=copy(self),
+                    ),
+                )
             self.reset()
             return True
         else:
@@ -209,6 +213,117 @@ class Attack(Action):
         if self.num_targets > 1:
             attack += f" [x{self.num_targets}]"
         return attack
+
+
+@dataclass(kw_only=True)
+class ApplyAttack(Action):
+    target: Entity
+    attack: Attack
+
+    @property
+    def is_negated(self):
+        return (
+            len(
+                [
+                    card
+                    for card in self.target.cards
+                    if card.is_discarded and card.is_checked
+                ]
+            )
+            == 1
+        ) or len(
+            [
+                card
+                for card in self.target.cards
+                if not card.is_discarded and card.is_checked
+            ]
+        ) == 2
+
+    def execute(self):
+        self.before_hit()
+        if isinstance(self.target, entity.Monster):
+            self.recieve_damage()
+            return True
+        else:
+            open_damage_handle(self)
+
+    def before_hit(self):
+        for effect in self.target.on_hit_effects:
+            effect.execute(self.attack)
+
+    def after_hit(self):
+        for effect in self.target.after_hit_effects:
+            effect.execute(self.attack)
+
+    def after_negation(self):
+        for card in self.target.cards:
+            if card.is_checked:
+                card.is_checked = False
+
+    def recieve_damage(self):
+        self.target.hp -= self.attack.damage
+        if self.target.hp <= 0:
+            entities.remove(self.target)
+        self.after_hit()
+
+
+def open_damage_handle(applied_attack: ApplyAttack):
+    ui = Picker()
+    ui.add_button(
+        Button(
+            f"Recieve {applied_attack.attack.damage} damage",
+            callback=lambda: handle_recieve(applied_attack),
+        )
+    )
+    ui.add_button(
+        Button(
+            "Negate damage",
+            callback=lambda: handle_negate(applied_attack),
+        )
+    )
+    pickers.append(ui)
+    return True
+
+
+def handle_recieve(applied_attack: ApplyAttack):
+    pickers.pop()
+    applied_attack.attack.recieve_damage()
+    return True
+
+
+def handle_negate(applied_attack: ApplyAttack):
+    pickers.pop()
+    ui = Picker(
+        objects=[
+            card
+            for card in applied_attack.target.cards
+            if card.is_discarded
+            or not card.selected
+            or not card.is_lost
+            or not card.is_passive
+        ]
+    )
+    for card in ui.objects:
+        card.on_click = card.toggle_checked
+    ui.add_button(
+        Button(
+            "Done",
+            callback=lambda: validate_negation(applied_attack),
+        )
+    )
+    ui.adjust()
+    pickers.append(ui)
+    return True
+
+
+def validate_negation(applied_attack: ApplyAttack):
+    if applied_attack.is_negated:
+        pickers.pop()
+        applied_attack.after_hit()
+        applied_attack.after_negation()
+        action_stack.pop()
+        post_execution()
+    return True
 
 
 @dataclass(kw_only=True)
@@ -262,7 +377,7 @@ class Retaliate(Action):
     damage: int
 
     def execute(self):
-        self.user.on_hit_effects.append(
+        self.user.after_hit_effects.append(
             RetaliateEffect(
                 damage=self.damage,
                 holder=self.user,

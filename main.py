@@ -99,13 +99,10 @@ def draw():
             text = msg[0]
         # pyxel.rect(3, 230 - y * 8 - 1, len(text) * 4 + 1, 7, 6)
         pyxel.text(4, 230 - y * 8, text.upper(), 0)
-
+    # debugging
     if action_stack:
         pyxel.text(4, 4, f"Action: {action_stack[-1].__class__.__name__}", 1)
     pyxel.text(4, 10, f"pickers: {len(pickers)}", 1)
-    # if action_stack:
-    #     pyxel.text(4, 4, f"{action_stack[-1].__class__.__name__}", 1)
-    # pyxel.text(4, 10, f"action_stack: {len(action_stack)}", 1)
 
 
 def load():
@@ -113,6 +110,7 @@ def load():
     bg = Monster.load("bandit_guard")
     bg.position = (5, 3)
     entities.append(bg)
+    print("-- loaded entities")
     for e in entities:
         print(e.etype, e.is_enemy)
 

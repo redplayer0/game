@@ -31,7 +31,12 @@ class Entity:
     lv_hp: list[int] = None
     hp: int = None
     on_hit_effects: list[Effect] = field(default_factory=list)
+    after_hit_effects: list[Effect] = field(default_factory=list)
     on_move_effects: list[Effect] = field(default_factory=list)
+
+    @property
+    def is_alive(self):
+        return self.hp > 0
 
     def draw(self):
         if self.position:

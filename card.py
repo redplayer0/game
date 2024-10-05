@@ -73,6 +73,7 @@ class Card:
     is_lost: bool = False
     is_passive: bool = False
     selected: int = 0
+    is_checked: bool = False
     on_click: str = None
 
     def __post_init__(self):
@@ -86,6 +87,9 @@ class Card:
         else:
             self.selected = 0
 
+    def toggle_checked(self):
+        self.is_checked = not self.is_checked
+
     def update(self, mx, my):
         x, y, w, h = self.x, self.y, self.w, self.h
         self.is_hovered = x <= mx <= x + w and y <= my <= y + h
@@ -95,13 +99,17 @@ class Card:
         x, y, w, h = self.x, self.y, self.w, self.h
         col = 6
         if self.selected == 1:
-            col = 4
-        elif self.selected == 2:
             col = 14
+        elif self.selected == 2:
+            col = 8
+        elif self.is_discarded:
+            col = 13
+        elif self.is_lost:
+            col = 4
         elif self.is_hovered:
             col = 12
         pyxel.rect(x, y, w, h, col)
-        pyxel.rectb(x, y, w, h, 1)
+        pyxel.rectb(x, y, w, h, 10 if self.is_checked else 1)
         pyxel.text(x + 4, y + 4, self.title, 0)
         pyxel.text(x + 4, y + 10, "-----", 0)
         iy = 1

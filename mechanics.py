@@ -3,9 +3,9 @@ from __future__ import annotations
 from copy import copy
 from random import choice
 
-from actions import Attack, Move
+import actions
+import entity
 from card import Half
-from entity import Character, Monster
 from globals import (
     action_stack,
     entities,
@@ -29,7 +29,7 @@ def to_entity_setup():
 
 
 def validate_setup():
-    if all([e.position for e in entities if isinstance(e, Character)]):
+    if all([e.position for e in entities if isinstance(e, entity.Character)]):
         action_stack.pop()
         action_stack.append(CardSelection())
         pickers[-1].add_button(Button("Resolve", callback=initial_resolve), pos=1)
@@ -48,7 +48,7 @@ def initial_resolve():
 
 
 def draw_monster_cards():
-    monster_types = [e.etype for e in entities if isinstance(e, Monster)]
+    monster_types = [e.etype for e in entities if isinstance(e, entity.Monster)]
     for mt in monster_types:
         if mt not in monster_decks or mt not in monster_selected_cards:
             print(f"ERROR {mt} not in decks or initiatives")
@@ -63,7 +63,7 @@ def draw_monster_cards():
 
 def set_monster_initiatives():
     for e in entities:
-        if isinstance(e, Monster):
+        if isinstance(e, entity.Monster):
             e.initiative = monster_selected_cards[e.etype].initiative
     for etype, card in monster_selected_cards.items():
         mlog(f"{etype} initiative set to {card.initiative}")
@@ -73,7 +73,7 @@ def resolve():
     entities.sort(key=lambda e: (e.has_acted, e.initiative, e.is_elite, e.id))
     scenario.active_entity = entities[0]
     scenario.active_entity.is_active = True
-    if isinstance(scenario.active_entity, Character):
+    if isinstance(scenario.active_entity, entity.Character):
         open_action_selection()
     else:
         monster_selected_action()
@@ -96,7 +96,7 @@ def monster_selected_action():
 
 def open_action_selection():
     active = scenario.active_entity
-    if not isinstance(active, Character):
+    if not isinstance(active, entity.Character):
         mlog("How did you get here without active entity")
         return
     ui = Picker(disable_scroll=True)
@@ -126,7 +126,7 @@ def open_action_selection():
     ui.objects.append(
         Half(
             half="top",
-            actions=[Attack()],
+            actions=[actions.Attack()],
             user=active,
             callback=selected_action,
             disabled=used_half == "top",
@@ -135,7 +135,7 @@ def open_action_selection():
     ui.objects.append(
         Half(
             half="bot",
-            actions=[Move()],
+            actions=[actions.Move()],
             user=active,
             callback=selected_action,
             disabled=used_half == "bot",
@@ -212,7 +212,7 @@ def preview_action():
 
 def open_inventory():
     if active := scenario.active_entity:
-        if not isinstance(active, Character):
+        if not isinstance(active, entity.Character):
             mlog("Monsters do not have items")
             return
         if active.items:
@@ -234,13 +234,14 @@ def close_inventory():
 def post_execution():
     if not action_stack:
         pickers.pop()
-        if isinstance(scenario.active_entity, Character):
+        if isinstance(scenario.active_entity, entity.Character):
             if scenario.active_entity.half_selected is True:
                 scenario.active_entity.has_acted = True
                 scenario.active_entity.is_active = False
                 if check_end_turn():
                     return
                 else:
+                    discard_characters_cards(scenario.active_entity)
                     resolve()
             else:
                 open_action_selection()
@@ -251,6 +252,14 @@ def post_execution():
                 return
             else:
                 resolve()
+
+
+def discard_characters_cards(char):
+    for c in char.cards:
+        if c.selected:
+            c.selected = 0
+            if not c.is_lost and not c.is_passive:
+                c.is_discarded = True
 
 
 def check_end_turn():
@@ -275,12 +284,8 @@ def clear_monster_selected_cards():
 
 def clear_characters_selected_cards():
     for e in entities:
-        if isinstance(e, Character):
-            for c in e.cards:
-                # discard card if not lost or not passive
-                if not any([c.is_lost, c.is_passive]):
-                    c.is_discarded = True
-                c.selected = 0
+        if isinstance(e, entity.Character):
+            discard_characters_cards(e)
             e.half_selected = None
         e.initiative = 0
         e.has_acted = False

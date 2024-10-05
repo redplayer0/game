@@ -31,3 +31,28 @@ damage = 2
 action = 'Move'
 range = 6
 fly = true
+# card ------------------
+[[rogue.cards]]
+name = "slash"
+initiative = 12
+level = 1
+[[rogue.cards.top]]
+action = 'Move'
+range = 3
+fly = true
+[[rogue.cards.bot]]
+action = 'Move'
+range = 3
+fly = true
+# card ------------------
+[[rogue.cards]]
+name = "hack"
+initiative = 32
+level = 1
+[[rogue.cards.top]]
+action = 'Attack'
+damage = 2
+[[rogue.cards.bot]]
+action = 'Move'
+range = 6
+fly = true
