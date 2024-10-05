@@ -17,8 +17,9 @@ class Half:
     half: str
     actions: list[actions.Action]
     user: Character
-    card: Card
+    card: Card = None
     callback: str = None
+    disabled: bool = False
     x: int = 10
     y: int = 0
     w: int = 160
@@ -42,13 +43,14 @@ class Half:
         return True
 
     def update(self, mx, my):
-        x, y, w, h = self.x, self.y, self.w, self.h
-        self.is_hovered = x <= mx <= x + w and y <= my <= y + h
-        return self.is_hovered
+        if not self.disabled:
+            x, y, w, h = self.x, self.y, self.w, self.h
+            self.is_hovered = x <= mx <= x + w and y <= my <= y + h
+            return self.is_hovered
 
     def draw(self):
         x, y, w, h = self.x, self.y, self.w, self.h
-        pyxel.rect(x, y, w, h, 12 if self.is_hovered else 6)
+        pyxel.rect(x, y, w, h, 12 if self.is_hovered else 13 if self.disabled else 6)
         pyxel.rectb(x, y, w, h, 1)
         for iy, ability in enumerate(self.actions):
             pyxel.text(x + 4, y + 4 + iy * 6, ability.text, 0)

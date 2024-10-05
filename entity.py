@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import pyxel
 import toml
 
+from actions import Effect
 from card import Card, MonsterCard
 from globals import monster_decks, monster_selected_cards
 from item import Item
@@ -29,8 +30,8 @@ class Entity:
     level: int = 0
     lv_hp: list[int] = None
     hp: int = None
-    on_hit_effects: list[callable] = field(default_factory=list)
-    on_move_effects: list[callable] = field(default_factory=list)
+    on_hit_effects: list[Effect] = field(default_factory=list)
+    on_move_effects: list[Effect] = field(default_factory=list)
 
     def draw(self):
         if self.position:

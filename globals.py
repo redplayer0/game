@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from campaign import Scenario
+
+if TYPE_CHECKING:
+    from entity import Entity
 
 
 @dataclass
@@ -13,7 +19,7 @@ class Visuals:
 
 
 action_stack = []
-entities = []
+entities: list[Entity] = []
 pickers = []
 messages = []
 log = []

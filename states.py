@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pyxel
 
-import mechanics
 from globals import entities, pickers, scenario
 from ui import Button, Picker
 from utils import mlog
@@ -19,6 +18,20 @@ class State:
         pass
 
 
+def set_active_entity():
+    if not scenario.active_entity and scenario.hovered_tile:
+        filtered_entities = [
+            e
+            for e in entities
+            if e.position == scenario.hovered_tile and not e.is_enemy
+        ]
+        if filtered_entities:
+            ent = filtered_entities[0]
+            scenario.active_entity = ent
+            scenario.active_entity.is_active = True
+            return True
+
+
 class SetupEntities(State):
     def on_click(self):
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
@@ -30,7 +43,7 @@ class SetupEntities(State):
                 scenario.active_entity.is_active = False
                 scenario.active_entity = None
             else:
-                if mechanics.set_active_entity():
+                if set_active_entity():
                     scenario.active_entity.in_hand = True
 
 
@@ -53,7 +66,7 @@ class CardSelection(State):
         return True
 
     def open_card_selection(self):
-        if mechanics.set_active_entity():
+        if set_active_entity():
             active = scenario.active_entity
             ui = Picker(
                 objects=[

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import copy
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -53,7 +54,7 @@ class Action:
 
 @dataclass(kw_only=True)
 class Move(Action):
-    range: int
+    range: int = 2
     fly: bool = False
     jump: bool = False
     tiles: list[tuple[int, int]] = field(default_factory=list)
@@ -124,7 +125,7 @@ class Move(Action):
 
 @dataclass(kw_only=True)
 class Attack(Action):
-    damage: int
+    damage: int = 2
     range: int = 1
     num_targets: int = 1
     pierce: int = 0
@@ -181,8 +182,10 @@ class Attack(Action):
             return self.ai()
         if self.targets:
             for target in self.targets:
-                # TODO
-                target.hp -= self.damage
+                cloned_attack = copy(self)
+                for effect in target.on_hit_effects:
+                    effect.execute(cloned_attack)
+                target.hp -= cloned_attack.damage
             self.reset()
             return True
         else:
@@ -231,13 +234,13 @@ class Shield(Action):
     value: int
 
     def execute(self):
-        print("executed sheild")
         self.user.on_hit_effects.append(
             ShieldEffect(
                 value=self.value,
                 holder=self.user,
             )
         )
+        mlog(f"{self.user.etype} shielded for {self.value}")
         return True
 
     @property
@@ -246,11 +249,26 @@ class Shield(Action):
 
 
 @dataclass(kw_only=True)
+class RetaliateEffect(Effect):
+    damage: int
+
+    def execute(self, attack: Attack, **kwargs):
+        attack.user.hp -= self.damage
+        mlog(f"{self.holder.etype} retaliated for {self.damage}!")
+
+
+@dataclass(kw_only=True)
 class Retaliate(Action):
     damage: int
 
     def execute(self):
-        print("executed retaliate")
+        self.user.on_hit_effects.append(
+            RetaliateEffect(
+                damage=self.damage,
+                holder=self.user,
+            )
+        )
+        mlog(f"{self.user.etype} will retatiate for {self.damage}")
         return True
 
     @property
