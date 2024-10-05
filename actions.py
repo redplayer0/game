@@ -2,27 +2,23 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 import pyxel
 
+import card as c
 import entity
+import mechanics
 from globals import action_stack, entities, pickers, scenario, visuals
-from mechanics import post_execution
 from ui import Button, Picker
 from utils import fill_tile, manhattan_distance, mlog
-
-if TYPE_CHECKING:
-    from card import Card, MonsterCard
-    from entity import Character, Entity, Monster
 
 
 @dataclass(kw_only=True)
 class Action:
     half: str = None
     lose: bool = False
-    user: Character | Monster = None
-    card: Card | MonsterCard = None
+    user: entity.Character | entity.Monster = None
+    card: c.Card | c.MonsterCard = None
     skippable: bool = True
 
     def preview(self):
@@ -287,7 +283,9 @@ def open_damage_handle(applied_attack: ApplyAttack):
 
 def handle_recieve(applied_attack: ApplyAttack):
     pickers.pop()
-    applied_attack.attack.recieve_damage()
+    applied_attack.recieve_damage()
+    action_stack.pop()
+    mechanics.post_execution()
     return True
 
 
@@ -322,7 +320,7 @@ def validate_negation(applied_attack: ApplyAttack):
         applied_attack.after_hit()
         applied_attack.after_negation()
         action_stack.pop()
-        post_execution()
+        mechanics.post_execution()
     return True
 
 

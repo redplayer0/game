@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 
 import pyxel
 
-from card import Card, Half
-from item import Item
+import card
+import item
 
 
 @dataclass
@@ -39,9 +39,9 @@ class Button:
 
 @dataclass(kw_only=True)
 class Picker:
-    objects: list[Card | Half | Item] = field(default_factory=list)
+    objects: list[card.Card | card.Half | item.Item] = field(default_factory=list)
     buttons: list[Button] = field(default_factory=list)
-    hovered: Card = None
+    hovered: card.Card | card.Half | item.Item = None
     disable_scroll: bool = False
 
     def __post_init__(self):
@@ -93,8 +93,8 @@ class Picker:
                 self.hovered = obj
 
     def draw(self):
-        for card in self.objects:
-            card.draw()
+        for obj in self.objects:
+            obj.draw()
         for button in self.buttons:
             button.draw()
 

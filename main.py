@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import pyxel
 
-from entity import Character, Monster
+import entity
+import mechanics
 from globals import (
     action_stack,
     board,
@@ -13,7 +14,6 @@ from globals import (
     scenario,
     visuals,
 )
-from mechanics import to_entity_setup
 from utils import draw_inner_tile, draw_tile
 
 rose_pine = [
@@ -106,8 +106,8 @@ def draw():
 
 
 def load():
-    entities.append(Character.load("rogue"))
-    bg = Monster.load("bandit_guard")
+    entities.append(entity.Character.load("rogue"))
+    bg = entity.Monster.load("bandit_guard")
     bg.position = (5, 3)
     entities.append(bg)
     print("-- loaded entities")
@@ -119,7 +119,7 @@ def main():
     pyxel.init(320, 240, fps=90, capture_sec=10)
     pyxel.mouse(True)
     # pyxel.colors.from_list(rose_pine)
-    to_entity_setup()
+    mechanics.to_entity_setup()
     pyxel.run(update, draw)
 
 

@@ -1,22 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 import pyxel
 
 import actions
+import entity
 from globals import action_stack
-
-if TYPE_CHECKING:
-    from entity import Character
 
 
 @dataclass(kw_only=True)
 class Half:
     half: str
     actions: list[actions.Action]
-    user: Character
+    user: entity.Character
     card: Card = None
     callback: str = None
     disabled: bool = False

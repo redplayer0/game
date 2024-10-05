@@ -4,8 +4,8 @@ from copy import copy
 from random import choice
 
 import actions
+import card as c
 import entity
-from card import Half
 from globals import (
     action_stack,
     entities,
@@ -29,7 +29,7 @@ def to_entity_setup():
 
 
 def validate_setup():
-    if all([e.position for e in entities if isinstance(e, entity.Character)]):
+    if all([ent.position for ent in entities if isinstance(ent, entity.Character)]):
         action_stack.pop()
         action_stack.append(CardSelection())
         pickers[-1].add_button(Button("Resolve", callback=initial_resolve), pos=1)
@@ -89,8 +89,8 @@ def monster_selected_action():
         action_stack.append(action)
     ui = Picker()
     ui.add_button(Button("Execute action", callback=execute_action, once=True))
-    ui.add_button(Button("Preview action", callback=preview_action))
-    ui.add_button(Button("Reset action", callback=reset_action))
+    # ui.add_button(Button("Preview action", callback=preview_action))
+    # ui.add_button(Button("Reset action", callback=reset_action))
     pickers.append(ui)
 
 
@@ -104,7 +104,7 @@ def open_action_selection():
     used_half = active.half_selected
     for card in [card for card in active.cards if card.selected]:
         ui.objects.append(
-            Half(
+            c.Half(
                 half="top",
                 actions=card.top,
                 user=active,
@@ -114,7 +114,7 @@ def open_action_selection():
             )
         )
         ui.objects.append(
-            Half(
+            c.Half(
                 half="bot",
                 actions=card.bot,
                 user=active,
@@ -124,7 +124,7 @@ def open_action_selection():
             )
         )
     ui.objects.append(
-        Half(
+        c.Half(
             half="top",
             actions=[actions.Attack()],
             user=active,
@@ -133,7 +133,7 @@ def open_action_selection():
         )
     )
     ui.objects.append(
-        Half(
+        c.Half(
             half="bot",
             actions=[actions.Move()],
             user=active,

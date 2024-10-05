@@ -6,10 +6,9 @@ from dataclasses import dataclass, field
 import pyxel
 import toml
 
-from actions import Effect
-from card import Card, MonsterCard
+import card as c
+import item as i
 from globals import monster_decks, monster_selected_cards
-from item import Item
 
 classes = toml.load("characters.toml")
 monsters = toml.load("monsters.toml")
@@ -26,7 +25,7 @@ class Entity:
     initiative: int = 0
     has_acted: bool = False
     is_active: bool = False
-    cards: list[Card] = field(default_factory=list)
+    cards: list[c.Card] = field(default_factory=list)
     level: int = 0
     lv_hp: list[int] = None
     hp: int = None
@@ -87,9 +86,9 @@ class Character(Entity):
             return
         edata = classes[etype]
         if "cards" in edata:
-            edata["cards"] = [Card.load(data) for data in edata["cards"]]
+            edata["cards"] = [c.Card.load(data) for data in edata["cards"]]
         if "items" in edata:
-            edata["items"] = [Item.load(data) for data in edata["items"]]
+            edata["items"] = [i.Item.load(data) for data in edata["items"]]
         return Character(**edata)
 
 
@@ -137,7 +136,7 @@ class Monster(Entity):
             return
         edata = monsters[etype]
         if etype not in monster_decks:
-            monster_decks[etype] = [MonsterCard.load(data) for data in edata["cards"]]
+            monster_decks[etype] = [c.MonsterCard.load(data) for data in edata["cards"]]
         if etype not in monster_selected_cards:
             monster_selected_cards[etype] = 0
         edata["cards"] = monster_decks[etype]
