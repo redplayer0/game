@@ -232,10 +232,12 @@ class Shield(Action):
 
     def execute(self):
         print("executed sheild")
-        # try:
-        #     self.user.on_hit_effects.append(ShieldEffect(value=self.value))
-        # except:
-        #     pass
+        self.user.on_hit_effects.append(
+            ShieldEffect(
+                value=self.value,
+                holder=self.user,
+            )
+        )
         return True
 
     @property

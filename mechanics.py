@@ -279,8 +279,7 @@ def skip_action():
         visuals.shake += 5
         return
     if action_stack[-1].skippable:
-        # TODO
-        # DO what happens in execute but do not execute
+        post_execution()
         mlog("Skipped action")
         return True
 
@@ -301,28 +300,29 @@ def execute_action():
         return
     if hasattr(action_stack[-1], "execute"):
         if action_stack[-1].execute():
-            action_stack.pop()
-            if isinstance(scenario.active_entity, Character):
-                if not action_stack:
-                    if scenario.active_entity.half_selected is True:
-                        scenario.active_entity.has_acted = True
-                        scenario.active_entity.is_active = False
-                        if check_end_turn():
+            post_execution()
 
-                            return True
-                        else:
-                            pickers.pop()
-                            resolve()
-                    else:
-                        pickers.pop()
-                        open_action_selection()
+
+def post_execution():
+    action_stack.pop()
+    if isinstance(scenario.active_entity, Character):
+        if not action_stack:
+            pickers.pop()
+            if scenario.active_entity.half_selected is True:
+                scenario.active_entity.has_acted = True
+                scenario.active_entity.is_active = False
+                if check_end_turn():
+                    return True
+                else:
+                    resolve()
             else:
-                if not action_stack:
-                    scenario.active_entity.has_acted = True
-                    scenario.active_entity.is_active = False
-                    if check_end_turn():
-                        pickers.pop()
-                        return True
-                    else:
-                        pickers.pop()
-                        resolve()
+                open_action_selection()
+    else:
+        if not action_stack:
+            pickers.pop()
+            scenario.active_entity.has_acted = True
+            scenario.active_entity.is_active = False
+            if check_end_turn():
+                return True
+            else:
+                resolve()
