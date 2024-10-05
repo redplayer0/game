@@ -255,11 +255,11 @@ def post_execution():
 
 
 def discard_characters_cards(char):
-    for c in char.cards:
-        if c.selected:
-            c.selected = 0
-            if not c.is_lost and not c.is_passive:
-                c.is_discarded = True
+    for card in char.cards:
+        if card.selected:
+            card.selected = 0
+            if not card.is_lost and not card.is_passive:
+                card.is_discarded = True
 
 
 def check_end_turn():
@@ -275,8 +275,8 @@ def clear_monster_selected_cards():
     for mt, card in monster_selected_cards.items():
         card.selected = False
         if card.shuffle:
-            for c in monster_decks[mt]:
-                c.discarded = False
+            for card in monster_decks[mt]:
+                card.discarded = False
         else:
             card.is_discarded = True
         monster_selected_cards[mt] = None
