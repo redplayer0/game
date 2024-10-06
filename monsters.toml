@@ -25,56 +25,44 @@ damage = 2
 [[bandit_guard.cards]]
 initiative = 30
 [[bandit_guard.cards.actions]]
-action = 'Move'
-range = 1
-[[bandit_guard.cards.actions]]
-action = 'Attack'
+action = 'MoveAttack'
+move_range = 1
 damage = -1
 # card ------------------
 [[bandit_guard.cards]]
 initiative = 35
 [[bandit_guard.cards.actions]]
-action = 'Move'
-range = -1
-[[bandit_guard.cards.actions]]
-action = 'Attack'
+action = 'MoveAttack'
+move_range = -1
 damage = 0
-range = 2
+attack_range = 2
 # card ------------------
 [[bandit_guard.cards]]
 initiative = 50
 [[bandit_guard.cards.actions]]
-action = 'Move'
-range = 0
-[[bandit_guard.cards.actions]]
-action = 'Attack'
+action = 'MoveAttack'
+move_range = 0
 damage = 0
 # card ------------------
 [[bandit_guard.cards]]
 initiative = 50
 [[bandit_guard.cards.actions]]
-action = 'Move'
-range = 0
-[[bandit_guard.cards.actions]]
-action = 'Attack'
+action = 'MoveAttack'
+move_range = 0
 damage = 0
 # card ------------------
 [[bandit_guard.cards]]
 initiative = 70
 [[bandit_guard.cards.actions]]
-action = 'Move'
-range = -1
-[[bandit_guard.cards.actions]]
-action = 'Attack'
+action = 'MoveAttack'
+move_range = -1
 damage = +1
 # card ------------------
 [[bandit_guard.cards]]
 initiative = 55
 [[bandit_guard.cards.actions]]
-action = 'Move'
-range = -1
-[[bandit_guard.cards.actions]]
-action = 'Attack'
+action = 'MoveAttack'
+move_range = -1
 damage = 0
 buffs = ['strengthen']
 # card ------------------

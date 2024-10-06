@@ -21,9 +21,6 @@ class Action:
     card: c.Card | c.MonsterCard = None
     skippable: bool = True
 
-    def preview(self):
-        pass
-
     def ai(self):
         return True
 
@@ -146,7 +143,7 @@ class Attack(Action):
                 self.targets.pop()
                 return
             if len(self.targets) == self.num_targets:
-                mlog(f"You can select up to {self.num_targets} targets to attack")
+                mlog(f"Select up to {self.num_targets} targets to attack")
                 visuals.shake += 5
                 return
             for e in entities:
@@ -213,7 +210,7 @@ class Attack(Action):
 
 @dataclass(kw_only=True)
 class ApplyAttack(Action):
-    target: Entity
+    target: entity.Entity
     attack: Attack
 
     @property
@@ -254,6 +251,11 @@ class ApplyAttack(Action):
     def after_negation(self):
         for card in self.target.cards:
             if card.is_checked:
+                if card.is_discarded:
+                    card.is_discarded = False
+                    card.is_lost = True
+                else:
+                    card.is_discarded = True
                 card.is_checked = False
 
     def recieve_damage(self):
@@ -297,8 +299,8 @@ def handle_negate(applied_attack: ApplyAttack):
             for card in applied_attack.target.cards
             if card.is_discarded
             or not card.selected
-            or not card.is_lost
             or not card.is_passive
+            and not card.is_lost
         ]
     )
     for card in ui.objects:
@@ -326,7 +328,7 @@ def validate_negation(applied_attack: ApplyAttack):
 
 @dataclass(kw_only=True)
 class Effect:
-    holder: Entity
+    holder: entity.Entity
     turns: int = 1
     procs: int = 0
 
@@ -387,3 +389,45 @@ class Retaliate(Action):
     @property
     def text(self):
         return f"Retaliate {self.damage}"
+
+
+@dataclass(kw_only=True)
+class MoveAttack(Action):
+    directions = [(-1, 0), (1, 0), (0, 1), (0, -1)]
+    move_range: int = 2
+    fly: bool = False
+    jump: bool = False
+    tiles: list[tuple[int, int]] = field(default_factory=list)
+    damage: int = 2
+    attack_range: int = 1
+    num_targets: int = 1
+    pierce: int = 0
+    push: int = 0
+    pull: int = 0
+    inflicts: list[str] = None
+    buffs: list[str] = None
+    targets: list[tuple[int, int]] = field(default_factory=list)
+
+    @property
+    def _move_range(self):
+        if isinstance(self.user, entity.Monster):
+            return self.move_range + self.user.mov
+        else:
+            return self.move_range
+
+    @property
+    def text(self):
+        move = "Fly" if self.fly else "Jump" if self.jump else "Move"
+        move += f" {self._move_range}"
+        attack = f"Attack {self.damage}"
+        if self.pierce:
+            attack += f" pierce {self.pierce}"
+        if self.pull:
+            attack += f" pull {self.pull}"
+        if self.push:
+            attack += f" pull {self.push}"
+        if self.inflicts:
+            attack += f" {self.inflicts}"
+        if self.num_targets > 1:
+            attack += f" [x{self.num_targets}]"
+        return f"{move}\n{attack}"

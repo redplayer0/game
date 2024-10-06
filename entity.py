@@ -6,8 +6,9 @@ from dataclasses import dataclass, field
 import pyxel
 import toml
 
-import card as c
-import item as i
+import actions
+import card
+import item
 from globals import monster_decks, monster_selected_cards
 
 classes = toml.load("characters.toml")
@@ -25,13 +26,13 @@ class Entity:
     initiative: int = 0
     has_acted: bool = False
     is_active: bool = False
-    cards: list[c.Card] = field(default_factory=list)
+    cards: list[card.Card] = field(default_factory=list)
     level: int = 0
     lv_hp: list[int] = None
     hp: int = None
-    on_hit_effects: list[Effect] = field(default_factory=list)
-    after_hit_effects: list[Effect] = field(default_factory=list)
-    on_move_effects: list[Effect] = field(default_factory=list)
+    on_hit_effects: list[actions.Effect] = field(default_factory=list)
+    after_hit_effects: list[actions.Effect] = field(default_factory=list)
+    on_move_effects: list[actions.Effect] = field(default_factory=list)
 
     @property
     def is_alive(self):
@@ -86,9 +87,9 @@ class Character(Entity):
             return
         edata = classes[etype]
         if "cards" in edata:
-            edata["cards"] = [c.Card.load(data) for data in edata["cards"]]
+            edata["cards"] = [card.Card.load(data) for data in edata["cards"]]
         if "items" in edata:
-            edata["items"] = [i.Item.load(data) for data in edata["items"]]
+            edata["items"] = [item.Item.load(data) for data in edata["items"]]
         return Character(**edata)
 
 
@@ -136,7 +137,9 @@ class Monster(Entity):
             return
         edata = monsters[etype]
         if etype not in monster_decks:
-            monster_decks[etype] = [c.MonsterCard.load(data) for data in edata["cards"]]
+            monster_decks[etype] = [
+                card.MonsterCard.load(data) for data in edata["cards"]
+            ]
         if etype not in monster_selected_cards:
             monster_selected_cards[etype] = 0
         edata["cards"] = monster_decks[etype]
